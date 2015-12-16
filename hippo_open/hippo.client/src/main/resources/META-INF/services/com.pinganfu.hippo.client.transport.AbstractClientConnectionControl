@@ -1,0 +1,3 @@
+com.pinganfu.hippo.client.transport.failover.FailoverConnectionControl
+com.pinganfu.hippo.client.transport.cluster.ClusterConnectionControl
+com.pinganfu.hippo.client.transport.simple.SimpleConnectionControl

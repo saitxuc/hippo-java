@@ -1,0 +1,2 @@
+com.pinganfu.hippo.broker.cluster.simple.MdbClusterReplicatedFactory
+com.pinganfu.hippo.broker.cluster.simple.LevelDbClusterReplicatedFactory
