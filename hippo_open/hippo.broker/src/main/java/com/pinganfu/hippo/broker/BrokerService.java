@@ -1,30 +1,5 @@
 package com.pinganfu.hippo.broker;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import com.pinganfu.hippo.broker.cluster.ReplicatedConstants;
 import com.pinganfu.hippo.broker.plugin.BrokerPlugin;
 import com.pinganfu.hippo.broker.transport.HippoBrokerCommandManager;
@@ -34,13 +9,7 @@ import com.pinganfu.hippo.broker.transport.TransportConnectorFactory;
 import com.pinganfu.hippo.broker.useage.SystemUsage;
 import com.pinganfu.hippo.client.ClientConstants;
 import com.pinganfu.hippo.client.HippoResult;
-import com.pinganfu.hippo.client.command.AtomicntCommand;
-import com.pinganfu.hippo.client.command.GetBitCommand;
-import com.pinganfu.hippo.client.command.GetCommand;
-import com.pinganfu.hippo.client.command.RemoveCommand;
-import com.pinganfu.hippo.client.command.SetBitCommand;
-import com.pinganfu.hippo.client.command.SetCommand;
-import com.pinganfu.hippo.client.command.UpdateCommand;
+import com.pinganfu.hippo.client.command.*;
 import com.pinganfu.hippo.common.domain.BucketInfo;
 import com.pinganfu.hippo.common.errorcode.HippoCodeDefine;
 import com.pinganfu.hippo.common.lifecycle.LifeCycle;
@@ -49,14 +18,7 @@ import com.pinganfu.hippo.common.serializer.KryoSerializer;
 import com.pinganfu.hippo.common.serializer.Serializer;
 import com.pinganfu.hippo.common.util.HashUtil;
 import com.pinganfu.hippo.common.util.IOExceptionSupport;
-import com.pinganfu.hippo.jmx.AnnotatedMBean;
-import com.pinganfu.hippo.jmx.BrokerMBeanSupport;
-import com.pinganfu.hippo.jmx.BrokerView;
-import com.pinganfu.hippo.jmx.ConnectorView;
-import com.pinganfu.hippo.jmx.ConnectorViewMBean;
-import com.pinganfu.hippo.jmx.ManagedConnection;
-import com.pinganfu.hippo.jmx.ManagedTransportConnection;
-import com.pinganfu.hippo.jmx.ManagedTransportConnector;
+import com.pinganfu.hippo.jmx.*;
 import com.pinganfu.hippo.manager.ManagementContext;
 import com.pinganfu.hippo.mdb.MdbStoreEngine;
 import com.pinganfu.hippo.network.CommandManager;
@@ -65,11 +27,21 @@ import com.pinganfu.hippo.network.command.Command;
 import com.pinganfu.hippo.network.command.CommandConstants;
 import com.pinganfu.hippo.network.transport.TransportConnectionManager;
 import com.pinganfu.hippo.store.exception.HippoStoreException;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
- * 
  * @author saitxuc
- *
  */
 public class BrokerService extends LifeCycleSupport implements Broker {
 
@@ -119,6 +91,9 @@ public class BrokerService extends LifeCycleSupport implements Broker {
             LOG.info(" BrokerService is doing doInit. ");
         }
         try {
+            for (int i = 0; i < counterMutex.length; i++) {
+                counterMutex[i] = new Object();
+            }
             if (cache == null) {
                 cache = new DefaultCache(this);
             }
@@ -191,7 +166,7 @@ public class BrokerService extends LifeCycleSupport implements Broker {
             LOG.info(" BrokerService is doing doStop. ");
         }
         removeShutdownHook();
-        
+
         cache.stop();
         for (int i = 0; i < transportConnectors.size(); i++) {
             TransportConnector connector = transportConnectors.get(i);
@@ -202,7 +177,7 @@ public class BrokerService extends LifeCycleSupport implements Broker {
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             if (mbeanServer != null) {
-                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext();) {
+                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext(); ) {
                     ObjectName name = (ObjectName) iter.next();
                     try {
                         mbeanServer.unregisterMBean(name);
@@ -296,11 +271,11 @@ public class BrokerService extends LifeCycleSupport implements Broker {
 
         final byte[] databytes = new byte[source.length - klength];
         System.arraycopy(source, klength, databytes, 0, databytes.length);
-        
+
         HippoResult result = cache.set(expire, keybytes, databytes, version, Integer.parseInt(bucketNo));
         return result;
     }
-    
+
     public HippoResult processUpdate(UpdateCommand updateCommand) {
         int expire = updateCommand.getExpire();
         String bucketNo = updateCommand.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
@@ -314,18 +289,18 @@ public class BrokerService extends LifeCycleSupport implements Broker {
         HippoResult result = cache.update(expire, keybytes, databytes, version, Integer.parseInt(bucketNo));
         return result;
     }
-    
+
     protected void checkSystemUsageLimits() throws IOException {
         /***
-        SystemUsage usage = getSystemUsage();
-        long memLimit = usage.getMemoryUsage().getLimit();
-        long jvmLimit = Runtime.getRuntime().maxMemory();
-        if (memLimit > jvmLimit) {
-            LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
-                      " mb) is more than the maximum available for the JVM: " +
-                      jvmLimit / (1024 * 1024) + " mb");
-        }
-        ***/
+         SystemUsage usage = getSystemUsage();
+         long memLimit = usage.getMemoryUsage().getLimit();
+         long jvmLimit = Runtime.getRuntime().maxMemory();
+         if (memLimit > jvmLimit) {
+         LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
+         " mb) is more than the maximum available for the JVM: " +
+         jvmLimit / (1024 * 1024) + " mb");
+         }
+         ***/
         if (this.getCache() != null) {
             Cache cache = getCache();
             cache.checkStoreEngineConfig();
@@ -357,9 +332,6 @@ public class BrokerService extends LifeCycleSupport implements Broker {
     private Object getCounterMutex(byte[] data) {
         int hash = HashUtil.murmurhash2(data, MUTEX_ARRAY_SIZE);
         int index = Math.abs(hash) % MUTEX_ARRAY_SIZE;
-        if (counterMutex[index] == null) {
-            counterMutex[index] = new Object();
-        }
         return counterMutex[index];
     }
 
@@ -377,7 +349,7 @@ public class BrokerService extends LifeCycleSupport implements Broker {
                     //get the expire time
                     String expireTimeStr = result.getSttribute("expireTime");
                     if (StringUtils.isNotEmpty(expireTimeStr) && Long.parseLong(expireTimeStr) > 0 && System.currentTimeMillis() > Long
-                        .parseLong(expireTimeStr)) {
+                            .parseLong(expireTimeStr)) {
                         newv = atomicntCommand.getInitv() + delta;
                         isNew = true;
                     } else {
@@ -459,7 +431,7 @@ public class BrokerService extends LifeCycleSupport implements Broker {
         }
 
         if (!result.isSuccess() && (HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(result.getErrorCode()) || HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(result
-            .getErrorCode()))) {
+                .getErrorCode()))) {
             result.setSuccess(true);
             result.putAttribute(CommandConstants.BIT_NOT_EXIST, "true");
             result.putAttribute(CommandConstants.BIT_GET_EXT_CODE, result.getErrorCode());
@@ -889,11 +861,11 @@ public class BrokerService extends LifeCycleSupport implements Broker {
             for (int i = 0; i < connectorList.size(); i++) {
                 TransportConnector transportConn = (TransportConnector) connectorList.get(i);
                 HippoTransportConnectionManager hippoConnectionManager = (HippoTransportConnectionManager) transportConn.getServer()
-                    .getTransportConnectionManager();
+                        .getTransportConnectionManager();
                 ManagedTransportConnector managedTran = (ManagedTransportConnector) hippoConnectionManager.getConnector();
                 String objNameKey = managedTran.getConnectorName().toString();
                 HippoTransportConnectionManager hippoClientConnectionManager = (HippoTransportConnectionManager) managedTran.getServer()
-                    .getTransportConnectionManager();
+                        .getTransportConnectionManager();
                 List<ManagedConnection> conList = hippoClientConnectionManager.getManagedConnections();
                 if (conList != null && conList.size() > 0) {
                     for (ManagedConnection mconn : conList) {
