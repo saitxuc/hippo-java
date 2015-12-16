@@ -119,6 +119,10 @@ public class MdbManagerImpl extends LifeCycleSupport implements MdbManager {
 
     @Override
     public void doInit() {
+        for (int i = 0; i < counterMutex.length; i++) {
+            counterMutex[i] = new Object();
+        }
+
         if (StringUtils.isEmpty(serializerType)) {
             serializerType = MdbConstants.DEFAULT_SERIALIZER_TYPE;
         }
@@ -1250,9 +1254,6 @@ public class MdbManagerImpl extends LifeCycleSupport implements MdbManager {
     private Object getCounterMutex(byte[] data) {
         int hash = HashUtil.murmurhash2(data, MUTEX_ARRAY_SIZE);
         int index = Math.abs(hash) % MUTEX_ARRAY_SIZE;
-        if (counterMutex[index] == null) {
-            counterMutex[index] = new Object();
-        }
         return counterMutex[index];
     }
 }
