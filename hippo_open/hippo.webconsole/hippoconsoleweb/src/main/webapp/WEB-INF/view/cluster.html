@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN" ng-app="clusterApp">
+  
+ <head>
+    <meta charset="utf-8">
+    <link rel="hippo icon" href="../img/favicon.ico">
+    <title>Hippo Console Cluster</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	<link href="../css/style.css" rel="stylesheet" type="text/css">
+	<link href="../css/hippo.css" rel="stylesheet" type="text/css">   
+    <link href="../css/font-awesome.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+  </head>
+
+<body ng-controller="clusterController">
+
+<div class="navbar navbar-fixed-top">
+	
+	<div class="navbar-inner">
+		
+		<div class="container" style="width:1200px">
+			
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</a>
+			
+			<a class="brand" href="cluster">
+				HIPPO CONSOLE WEB			
+			</a>		
+			
+			<div class="pull-right" style="padding: 7px 0;">
+				<font style="color:white">
+				<i class="icon-user"></i> ${userName}	 [ <a href="#" onclick="window.location='../index/logout'" style="color:#FFFFFF">Logout</a> ]
+				</font>
+			</div>
+	
+		</div>
+		
+	</div>
+	
+</div>
+    
+<div class="subnavbar">
+
+	<div class="subnavbar-inner">
+	
+		<div class="container" style="width:1200px">
+
+			<ul class="mainnav" style="width:1200px">
+			
+				<li class="active">
+					<a href="cluster">
+						<i class="icon-list"></i>
+						<span>Cluster</span>
+					</a>	    				
+				</li>
+				
+				
+				<li >
+					<a href="dataService">
+						<i class="icon-th-large"></i>
+						<span>DataService</span>
+					</a>    				
+				</li>
+				
+				<li>					
+					<a href="zookeeper">
+						<i class="icon-sitemap"></i>
+						<span>Zookeeper</span>
+					</a>  									
+				</li>
+                
+                
+                <li>					
+					<a href="zkBackUp">
+						<i class="icon-table"></i>
+						<span>ZkBackUp</span>
+					</a>  									
+				</li>
+                
+                
+                <li>					
+					<a href="machine">
+						<i class="icon-table"></i>
+						<span>Machine</span>
+					</a>  									
+				</li>
+			
+			</ul>
+
+		</div> 
+	
+	</div>
+	
+	<div id="loading-frame">
+	    <div id="loading-wrap">
+	        <div class="progress progress-striped active">
+	            <div class="bar" style="width: 0%;"></div>
+	        </div>
+	    </div>
+	</div>
+
+</div>
+    
+
+    
+<div class="main">
+	<div class="main-inner">
+	    <div class="container" style="width:1200px">
+		     <div class="row">
+		      	<div class="span12" style="width:1200px">
+		      		<div class="info-box">
+		      			<div class="widget widget-table action-table">
+			            <div class="widget-header">
+			            <i class="icon-th-list"></i>
+			              <h3>集群信息列表</h3>
+			            <div style="float:right">
+			            <a href="#" class="btn btn-small btn-invert" ng-click="search()">查询条件</a> |
+			            <a href="#" class="btn btn-small btn-invert" ng-click="addWin()">新 增</a> |
+			            <a href="#" class="btn btn-small btn-invert" ng-click="dodel()">删 除</a> |
+			            <a href="#" class="btn btn-small btn-invert" ng-click="editWin()">修 改</a> |
+			            <a href="#" class="btn btn-small btn-invert" ng-click="doSend()">推 送</a> &nbsp;
+			            </div>
+			            </div>
+			            <!-- /widget-header -->
+			            <div class="widget-content">
+			              <table class="table table-striped table-bordered">
+			                <thead>
+			                  <tr >
+			                 	<th><center>-</center></th>
+			                    <th><center>Cluster Name</center></th>
+			                    <th><center>DB Type</center></th>
+			                    <th><center>Replicate Port</center></th>
+			                    <th><center>Bucket Limit</center></th>
+			                    <th><center>Copy Count</center></th>
+			                    <th><center>Hash Count</center></th>
+			                    <th><center>Status</center></th>
+			                    <th class="td-actions"><center>操作</center></th>
+			                  </tr>
+			                </thead>
+			                <tbody>
+			                  <tr ng-repeat="record in records track by record.id" >
+			                  	<td><center><input type="checkbox" id={{record.id}} name="{{record.name}}" ng-checked="isSelected(record.id)" ng-click="updateSelection($event,record.id)" /></center></td>
+			                    <td><center><a href="#" ng-click="getDataServer(record.clusterName)">{{record.clusterName}}</a></center></td>
+			                    <td><center>{{record.dbType}}</center></td>
+			                    <td><center>{{record.replicatePort}}</center></td>
+			                    <td><center>{{record.bucketLimit}}</center></td>
+			                    <td><center>{{record.copyCount}}</center></td>
+			                    <td><center>{{record.hashCount}}</center></td>
+			                    <td><center>{{record.status | filterStatus}}</center></td>
+			                    <td nowrap>
+			                    <center>
+			                    <a href="#" class="btn btn-small btn-primary" ng-click="tableWin(record.clusterName)">构造表状态</a>
+			                    <a href="#" class="btn btn-small btn-primary" ng-click="cmdWin(record.clusterName)">命令模式</a>
+			                    </center>
+			                    </td>
+			                  </tr>
+			                </tbody>
+			              </table>
+			            </div>
+			            <!-- /widget-content --> 
+         				</div>
+		      		</div>
+		      		
+		      		<center>
+						<div class='pagination'>
+			                <ul>
+			                	<li ng-class="{true:'active'}[currentPage==1]"><a href='#' ng-click="loadPage(1)">首页</a></li>
+			                    <li ng-class="{true:'disabled'}[currentPage==1]"><a href='#' ng-click="prev()">上一页</a></li>
+			                    <li ng-repeat="page in pages" ng-class="{true:'disabled'}[currentPage==page]"><a href='#' ng-click="loadPage(page)">{{page}}</a></li>
+			                    <li ng-class="{true:'disabled'}[currentPage==totalPage]"><a href='#' ng-click="next()">下一页</a></li>
+			                    <li ng-class="{true:'active'}[currentPage==totalPage]"><a href='#' ng-click="loadPage(totalPage)">尾页</a></li>
+			                </ul>
+			            </div>
+					</center>
+		
+	         	</div>
+        	</div>
+	    </div>
+	</div>
+</div>
+
+<!-- Windows search start -->
+<div class='modal hide fade' id='recordServerWin' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>集群查询条件</h3>
+    </div>
+  	<div class='modal-body alert'>
+         <table class="table table-striped table-bordered">
+           <thead>
+             <tr >
+               <th><center>Cluster Name</center></th>
+               <th><center>Server Id</center></th>
+               <th><center>Broker Name</center></th>
+               <th><center>Broker Version</center></th>
+               <th><center>Status</center></th>
+               <th><center>Bucket Count</center></th>
+               <th><center>Master Bucket</center></th>
+             </tr>
+           </thead>
+           <tbody>
+             <tr ng-repeat="serverRecord in serverRecords track by serverRecord.id" >
+               <td><center>{{serverRecord.clusterName}}</center></td>
+               <td><center>{{serverRecord.server_id}}</center></td>
+               <td><center>{{serverRecord.brokerName}}</center></td>
+               <td><center>{{serverRecord.brokerVersion}}</center></td>
+               <td><center>{{serverRecord.status | filterServerStatus}}</center></td>
+               <td><center>{{serverRecord.bucketCount}}</center></td>
+               <td><center>{{serverRecord.masterBucket}}</center></td>
+             </tr>
+           </tbody>
+         </table>
+         
+         <center>
+			<div class='pagination'>
+                <ul>
+                	<li ng-class="{true:'active'}[server.currentPage==1]"><a href='#' ng-click="server.loadPage(1)">首页</a></li>
+                    <li ng-class="{true:'disabled'}[server.currentPage==1]"><a href='#' ng-click="server.prev()">上一页</a></li>
+                    <li ng-repeat="page in serverPages" ng-class="{true:'disabled'}[server.currentPage==page]"><a href='#' ng-click="server.loadPage(page)">{{page}}</a></li>
+                    <li ng-class="{true:'disabled'}[server.currentPage==server.totalPage]"><a href='#' ng-click="server.next()">下一页</a></li>
+                    <li ng-class="{true:'active'}[server.currentPage==server.totalPage]"><a href='#' ng-click="server.loadPage(server.totalPage)">尾页</a></li>
+                </ul>
+            </div>
+		</center>
+  	</div>
+    <div class='modal-footer'>
+        <button class='btn' data-dismiss='modal'>Close</button>
+    </div>
+</div>
+<!-- Windows search end -->
+
+
+<!-- Windows dataserver start -->
+<div class='modal hide fade' id='recordSearch' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>集群查询条件</h3>
+    </div>
+  	<div class='modal-body alert'>
+      	<table width="100%">
+      		
+      		<tr>
+      		<td width="15%" align="right">Cluster Name :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="search.clusterName" /></td>
+      		<td width="15%" align="right">DB Type :</td>
+      		<td width="35%" align="left"><select ng-model="search.dbType" ng-options="type.id as type.name for type in typeList"><option value="">--请选择--</option></select></td>
+      		</tr>
+      		<tr>
+      		<td width="15%" align="right">Replicate Port :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="search.replicatePort" /></td>
+      		<td width="15%" align="right">Status :</td>
+      		<td width="35%" align="left"><select ng-model="search.status" ng-options="status.id as status.name for status in statusList"><option value="">--请选择--</option></select></td>
+      		</tr>
+      		
+      	</table>
+  	</div>
+    <div class='modal-footer'>
+        <button class='btn' data-dismiss='modal'>Close</button>
+        <button class='btn btn-primary' ng-click="doSearch()">Search</button>
+    </div>
+</div>
+<!-- Windows dataserver end -->
+
+
+<!-- Windows add start -->
+<div class='modal hide fade' id='recordAdd' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>创建集群</h3>
+    </div>
+  	<div class='modal-body alert'>
+      	<table width="100%">
+      		
+      		<tr>
+      		<td width="15%" align="right">Cluster Name :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.clusterName" placeholder='Cluster Name' /><font color="red"> *</font></td>
+      		<td width="15%" align="right">DB Type :</td>
+      		<td width="35%" align="left"><select ng-model="add.dbType" ng-options="type.id as type.name for type in typeList"><option value="">--请选择--</option></select><font color="red"> *</font></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Copy Count :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.copyCount"  placeholder='Copy Count'/><font color="red"> *</font></td>
+      		<td width="15%" align="right">Bucket Limit :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.bucketLimit"  placeholder='Bucket Limit'/><font color="red"> *</font></td>
+      		</tr>
+      		
+      		
+      		<tr>
+      		<td width="15%" align="right">Replicate Port :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.replicatePort" placeholder='Replicate Port' /><font color="red"> *</font></td>
+      		<td width="15%" align="right">Hash Count :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.hashCount" placeholder='Hash Count' /><font color="red"> *</font></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Content :</td>
+      		<td colspan="3" align="left"><textarea class='autosize input-block-level' placeholder='请填写集群描述' rows='5' style="width:580px" ng-model="add.content"></textarea></td>
+      		</tr>
+      		
+      	</table>
+  	</div>
+    <div class='modal-footer'>
+        <button class='btn' data-dismiss='modal'>Close</button>
+        <button class='btn btn-primary' ng-click="doSave()">Save</button>
+    </div>
+</div>
+<!-- Windows add end -->
+
+
+<!-- Windows edit start -->
+<div class='modal hide fade' id='recordEdit' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>修改集群</h3>
+    </div>
+  	<div class='modal-body alert'>
+      	<table width="100%">
+      		
+      		<tr>
+      		<td width="15%" align="right">Cluster Name :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.clusterName" placeholder='Cluster Name' /><font color="red"> *</font></td>
+      		<td width="15%" align="right">DB Type :</td>
+      		<td width="35%" align="left"><select ng-model="edit.dbType" ng-options="type.id as type.name for type in typeList"><option value="">--请选择--</option></select><font color="red"> *</font></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Copy Count :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.copyCount"  placeholder='Copy Count'/><font color="red"> *</font></td>
+      		<td width="15%" align="right">Bucket Limit :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.bucketLimit"  placeholder='Bucket Limit'/><font color="red"> *</font></td>
+      		</tr>
+      		
+      		
+      		<tr>
+      		<td width="15%" align="right">Replicate Port :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.replicatePort" placeholder='Replicate Port' /><font color="red"> *</font></td>
+      		<td width="15%" align="right">Hash Count :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.hashCount" placeholder='Hash Count' /><font color="red"> *</font></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Content :</td>
+      		<td colspan="3" align="left"><textarea class='autosize input-block-level' placeholder='请填写集群描述' rows='5' style="width:580px" ng-model="edit.content"></textarea></td>
+      		</tr>
+      		
+      	</table>
+  	</div>
+    <div class='modal-footer'>
+        <button class='btn' data-dismiss='modal'>Close</button>
+        <button class='btn btn-primary' ng-click="doEditSave()">Save</button>
+    </div>
+</div>
+<!-- Windows edit end -->
+
+
+<!-- Windows cmd start -->
+<div class='modal hide fade' id='recordCmd' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>命令模式</h3>
+    </div>
+  	<div class='modal-body alert'>
+      	<table width="100%">
+      		
+      		<tr>
+      		<td width="15%" align="right">方法名 :</td>
+      		<td width="35%" align="left"><select ng-model="cmd.funName" ng-options="fun.id as fun.name for fun in funList" ng-change="funChange()"><option value="">--请选择--</option></select><font color="red"> *</font></td>
+      		<td width="15%" align="right">集群名 :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="cmd.clusterName" placeholder='Cluster Name' readOnly/><font color="red"> *</font></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">键 :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="cmd.key"  placeholder='Key'/><font color="red"> *</font></td>
+      		<td width="15%" align="right"><div id="val">值 :</div></td>
+      		<td width="35%" align="left"><div id="val_"><input type="text" ng-model="cmd.value"  placeholder='Value'/><font color="red"> *</font></div></td>
+      		</tr>
+      		
+      		
+      		<tr>
+      		<td width="15%" align="right"><div id="defaultVal">默认值 :</div></td>
+      		<td width="35%" align="left"><div id="defaultVal_"><input type="text" ng-model="cmd.defaultVal" placeholder='Default Value' /><font color="red"> *</font></div></td>
+      		<td width="15%" align="right"><div id="expireTime">过期时间 :</td>
+      		<td width="35%" align="left"><div id="expireTime_"><input type="text" ng-model="cmd.expireTime" placeholder='Expire Time' /> 秒 <font color="red"> *</font></div></td>
+      		</tr>
+      		
+      		<tr>
+      		<td colspan="4"><center><button class='btn btn-primary' ng-click="cmdSubmit()">Submit</button></center></td>
+      		</tr>
+      		
+      		<tr>
+      		<td colspan="4"><hr></td>
+      		</tr>
+      		
+      		<tr>
+      		<td colspan="4"><center><textarea class='autosize input-block-level' placeholder='Hippo Result' rows='5' style="width:580px" ng-model="cmd.result"></textarea></center></td>
+      		</tr>
+      		
+      	</table>
+  	</div>
+</div>
+<!-- Windows cmd end -->
+
+<!-- Windows table start -->
+<div class='modal hide fade' id='recordTable' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>构建表</h3>
+    </div>
+  	<div class='modal-body alert'>
+  	<center>
+  		<div id="resultTable" style="width: 1100px;height:360px; overflow:auto;"></div>
+  	</center>
+      	
+  	</div>
+  	<div class='modal-footer'>
+  		<center>
+        <button class='btn btn-cancel' data-dismiss='modal'>Close</button>
+        </center>
+    </div>
+</div>
+<!-- Windows table end -->
+
+<div ng-include="'../index/modalIncludePage'"></div>
+
+<div class="footer">
+	
+	<div class="footer-inner">
+		
+		<div class="container">
+			
+			<div class="row">
+				
+    			<div class="span12">
+    				&copy; 2015 <a href="#">上海平安付  HIPPO CONSOLE WEB</a>.
+    			</div>
+    			
+    		</div>
+    		
+		</div>
+		
+	</div>
+	
+</div>
+<script src="../js/jquery/jquery-2.1.4.min.js"></script>
+<script src="../js/angular-1.2.19/angular.min.js"></script>
+<script src="../js/bootstrap-3.3.5/js/bootstrap.min.js"></script> 
+<script src="../js/bootstrap/ui-bootstrap-tpls.min.js"></script>
+<script src="../js/excanvas.min.js"></script>
+<script type="text/javascript" src="../js/loading.js"></script>
+<script src="../js/script/cluster.js"></script>
+<script src="../js/script/bulidTable.js"></script>
+</body>
+
+</html>

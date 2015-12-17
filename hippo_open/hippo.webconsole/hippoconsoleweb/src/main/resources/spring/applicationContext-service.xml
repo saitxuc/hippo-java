@@ -1,0 +1,37 @@
+﻿<!-- Application context definition. -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/jdbc
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/jdbc/spring-jdbc.xsd"
+	default-autowire="byName">
+	<context:property-placeholder location="file:/wls/wls81/envconfig/hippoconsoleweb/env.properties" />
+	<context:annotation-config />
+	<!-- add by gushijie 2015-03-10 -->
+	<bean id="serverInfoInterface" class="com.hippoconsoleweb.service.impl.ServerInfoInterfaceImpl" />
+	<bean id="clusterInfoInterface" class="com.hippoconsoleweb.service.impl.ClusterInfoInterfaceImpl" />
+	<bean id="getJmxInfoInterface" class="com.hippoconsoleweb.service.impl.GetJmxInfoInterfaceImpl" />
+	<bean id="zkBackupInfoInterface" class="com.hippoconsoleweb.service.impl.ZkBackupInfoInterfaceImpl" />
+	<bean id="backupService" class="com.hippoconsoleweb.service.BackupService" />
+	<bean id="propertyConfigurer"  class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath*:env.properties</value>
+            </list>
+        </property>
+    </bean>
+	
+	<bean id="consoleManagerService" class="com.hippoconsoleweb.service.ConsoleManagerService"
+		init-method="initConsole" destroy-method="close">
+		<property name="zkAddress" value="${dubbo.registry.address}" />
+	</bean>
+	<bean id="clientPool" class="com.hippoconsoleweb.cmd.ClientPool" destroy-method="stopAllClient"></bean>
+	<bean id="hippoClientCallInterface" class="com.hippoconsoleweb.cmd.client.impl.HippoClientCallInterfaceImpl" init-method="startSheduledJob"></bean>
+</beans>

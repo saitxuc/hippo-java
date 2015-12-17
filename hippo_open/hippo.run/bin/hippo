@@ -1,0 +1,670 @@
+#!/bin/sh
+# ------------------------------------------------------------------------
+# CONFIGURATION
+HIPPO_CONFIGS="HIPPO_HOME/conf"
+
+# Backup invocation parameters
+COMMANDLINE_ARGS="$@"
+
+# For using instances
+if ( basename $0 | grep "hippo-instance-" > /dev/null);then
+   INST="`basename $0|sed 's/^hippo-instance-//;s/\.sh$//'`"
+   HIPPO_CONFIGS="/etc/default/hippo-instance-${INST} $HOME/.hipporc-instance-${INST}"
+   echo "INFO: Using alternative hippo configuration files: $HIPPO_CONFIGS"
+fi
+
+## START:DEFAULTCONFIG
+# ------------------------------------------------------------------------
+# Configuration file for running Hippo as standalone provider
+#
+# This file overwrites the predefined settings of the sysv init-script
+#
+# Hippo installation dir
+if [ -z "$HIPPO_HOME" ] ; then
+  # try to find HIPPO
+  if [ -d /opt/hippo ] ; then
+    HIPPO_HOME=/opt/hippo
+  fi
+
+  if [ -d "${HOME}/opt/hippo" ] ; then
+    HIPPO_HOME="${HOME}/opt/hippo"
+  fi
+
+  ## resolve links - $0 may be a link to hippo's home
+  PRG="$0"
+  progname=`basename "$0"`
+  saveddir=`pwd`
+
+  # need this for relative symlinks
+  dirname_prg=`dirname "$PRG"`
+  cd "$dirname_prg"
+
+  while [ -h "$PRG" ] ; do
+    ls=`ls -ld "$PRG"`
+    link=`expr "$ls" : '.*-> \(.*\)$'`
+    if expr "$link" : '.*/.*' > /dev/null; then
+    PRG="$link"
+    else
+    PRG=`dirname "$PRG"`"/$link"
+    fi
+  done
+
+  HIPPO_HOME=`dirname "$PRG"`/..
+
+  cd "$saveddir"
+
+  # make it fully qualified
+  HIPPO_HOME=`cd "$HIPPO_HOME" && pwd`
+fi
+
+if [ -z "$HIPPO_BASE" ] ; then
+  HIPPO_BASE="$HIPPO_HOME"
+fi
+
+# Hippo configuration directory
+if [ -z "$HIPPO_CONF" ] ; then
+
+    # For backwards compat with old variables we let HIPPO_CONFIG_DIR set HIPPO_CONF
+    if [ -z "$HIPPO_CONFIG_DIR" ] ; then
+        HIPPO_CONF="$HIPPO_BASE/conf"
+    else
+        HIPPO_CONF="$HIPPO_CONFIG_DIR"
+    fi
+fi
+
+# Configure a user with non root priviledges, if no user is specified do not change user
+if [ -z "$HIPPO_USER" ] ; then
+    HIPPO_USER=""
+fi
+
+# Hippo data directory
+if [ -z "$HIPPO_DATA" ] ; then
+
+    # For backwards compat with old variables we let HIPPO_DATA_DIR set HIPPO_DATA
+    if [ -z "$HIPPO_DATA_DIR" ] ; then
+        HIPPO_DATA="$HIPPO_BASE/data"
+    else
+        HIPPO_DATA="$HIPPO_DATA_DIR"
+    fi
+fi
+
+if [ -z "$HIPPO_TMP" ] ; then
+  HIPPO_TMP="$HIPPO_BASE/tmp"
+fi
+
+setCurrentUser(){
+   CUSER=`whoami 2>/dev/null`
+
+   # Solaris fix
+   if [ ! $? -eq 0 ]; then
+      CUSER=`/usr/ucb/whoami 2>/dev/null`
+   fi
+}
+
+if [ ! -d "$HIPPO_DATA" ]; then
+   setCurrentUser
+   if ( [ -z "$HIPPO_USER" ] || [ "$HIPPO_USER" = "$CUSER" ] );then
+        mkdir $HIPPO_DATA
+   elif [ "`id -u`" = "0" ];then
+      su -c "mkdir $HIPPO_DATA" - $HIPPO_USER;
+   fi
+fi
+
+# Location of the pidfile
+if [ -z "$HIPPO_PIDFILE" ]; then
+  HIPPO_PIDFILE="$HIPPO_DATA/hippo-`hostname`.pid"
+fi
+
+# Location of the java installation
+# Specify the location of your java installation using JAVA_HOME, or specify the
+# path to the "java" binary using JAVACMD
+# (set JAVACMD to "auto" for automatic detection)
+#JAVA_HOME=""
+JAVACMD="auto"
+
+# Set jvm memory configuration
+if [ -z "$HIPPO_OPTS_MEMORY" ] ; then
+    HIPPO_OPTS_MEMORY="-server -XX:+UseCompressedOops -XX:+TieredCompilation -XX:CMSFullGCsBeforeCompaction=1 -XX:MaxDirectMemorySize=13g -Xms1g -Xmx3g -Xmn512m -XX:MaxPermSize=512m"
+	HIPPO_OPTS_MEMORY="$HIPPO_OPTS_MEMORY -XX:+UseConcMarkSweepGC -XX:+UseCMSCompactAtFullCollection -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled -XX:SoftRefLRUPolicyMSPerMB=0 -XX:+CMSClassUnloadingEnabled -XX:SurvivorRatio=8 -XX:+ExplicitGCInvokesConcurrent"
+	HIPPO_OPTS_MEMORY="$HIPPO_OPTS_MEMORY -verbose:gc -Xloggc:${HIPPO_BASE}/logs/hippo_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
+fi
+
+# Uncomment to enable audit logging
+#HIPPO_OPTS="$HIPPO_OPTS -Dorg.apache.hippo.audit=true"
+
+# Set jvm jmx configuration
+# This enables jmx access over a configured jmx-tcp-port.
+# You have to configure the first four settings if you run a ibm jvm, caused by the
+# fact that IBM's jvm does not support VirtualMachine.attach(PID).
+# JMX access is needed for quering a running hippo instance to gain data or to
+# trigger management operations.
+#
+# Example for ${HIPPO_CONF}/jmx.access:
+# ---
+# # The "monitorRole" role has readonly access.
+# # The "controlRole" role has readwrite access.
+# monitorRole readonly
+# controlRole readwrite
+# ---
+#
+# Example for ${HIPPO_CONF}/jmx.password:
+# ---
+# # The "monitorRole" role has password "abc123".
+# # # The "controlRole" role has password "abcd1234".
+# monitorRole abc123
+# controlRole abcd1234
+# ---
+#
+# HIPPO_SUNJMX_START="-Dcom.sun.management.jmxremote.port=11099 "
+# HIPPO_SUNJMX_START="$HIPPO_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${HIPPO_CONF}/jmx.password"
+# HIPPO_SUNJMX_START="$HIPPO_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${HIPPO_CONF}/jmx.access"
+# HIPPO_SUNJMX_START="$HIPPO_SUNJMX_START -Dcom.sun.management.jmxremote.ssl=false"
+HIPPO_SUNJMX_START="$HIPPO_SUNJMX_START -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+
+
+# Set jvm jmx configuration for controlling the broker process
+# You only have to configure the first four settings if you run a ibm jvm, caused by the
+# fact that IBM's jvm does not support VirtualMachine.attach(PID)
+# (see also com.sun.management.jmxremote.port, .jmx.password.file and .jmx.access.file )
+#HIPPO_SUNJMX_CONTROL="--jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:1099/jmxrmi --jmxuser controlRole --jmxpassword abcd1234"
+HIPPO_SUNJMX_CONTROL=""
+
+# Specify the queue manager URL for using "browse" option of sysv initscript
+if [ -z "$HIPPO_QUEUEMANAGERURL" ]; then
+    HIPPO_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
+fi
+
+# Set additional JSE arguments
+HIPPO_SSL_OPTS="$SSL_OPTS"
+
+# Uncomment to enable YourKit profiling
+#HIPPO_DEBUG_OPTS="-agentlib:yjpagent"
+HIPPO_DEBUG_OPTS="-XX:-OmitStackTraceInFastThrow"
+HIPPO_DEBUG_OPTS="$HIPPO_DEBUG_OPTS -Djava.ext.dirs=${HIPPO_BASE}/lib -Dlogback.configurationFile=${HIPPO_BASE}/conf/logback.xml -Dlog4j.configurationFile=${HIPPO_BASE}/conf/log4j.properties"
+HIPPO_DEBUG_OPTS="$HIPPO_DEBUG_OPTS -Djava.util.Arrays.useLegacyMergeSort=true"
+#HIPPO_DEBUG_OPTS="$HIPPO_DEBUG_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=9555,server=y,suspend=n"
+
+# Uncomment to enable remote debugging
+#HIPPO_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+
+# Hippo tries to shutdown the broker by jmx,
+# after a specified number of seconds send SIGKILL
+if [ -z "$HIPPO_KILL_MAXSECONDS" ]; then
+    HIPPO_KILL_MAXSECONDS=30
+fi
+
+## END:DEFAULTCONFIG
+
+# ------------------------------------------------------------------------
+# LOAD CONFIGURATION
+
+# load hippo configuration
+CONFIG_LOAD="no"
+for HIPPO_CONFIG in $HIPPO_CONFIGS;do
+   if [ -f "$HIPPO_CONFIG" ] ; then
+     ( . $HIPPO_CONFIG >/dev/null 2>&1 )
+     if [ "$?" != "0" ];then
+      echo "ERROR: There are syntax errors in '$HIPPO_CONFIG'"
+      exit 1
+     else
+       echo "INFO: Loading '$HIPPO_CONFIG'"
+       . $HIPPO_CONFIG
+      CONFIG_LOAD="yes"
+     fi
+   fi
+done
+
+# inform user that default configuration is loaded, no suitable configfile found
+if [ "$CONFIG_LOAD" != "yes" ];then
+   if [ "$1" != "setup" ];then
+      echo "INFO: Using default configuration";
+      echo "(you can configure options in: $HIPPO_CONFIGS)"
+      echo
+   fi
+fi
+
+if [ -z "$HIPPO_OPTS" ] ; then
+    HIPPO_OPTS="$HIPPO_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties"
+fi
+
+# create configuration if requested
+if [ "$1" = "setup" ];then
+   if [ -z "$2" ];then
+      echo "ERROR: Specify configuration file"
+      exit 1
+   fi
+   echo "INFO: Creating configuration file: $2"
+   (
+   P_STATE="0"
+   while read LINE ;do
+      if (echo "$LINE" | grep "START:DEFAULTCONFIG" >/dev/null );then
+         P_STATE="1"
+         continue;
+      fi
+      if (echo "$LINE" | grep "END:DEFAULTCONFIG" >/dev/null);then
+         P_STATE="0"
+         break;
+      fi
+      if [ "$P_STATE" -eq "1" ];then
+         echo $LINE
+      fi
+   done < $0
+   ) > $2
+
+   setCurrentUser
+
+   echo "INFO: It's recommend to limit access to '$2' to the priviledged user"
+   echo "INFO: (recommended: chown '$CUSER':nogroup '$2'; chmod 600 '$2')"
+   exit $?
+fi
+
+# ------------------------------------------------------------------------
+# OS SPECIFIC SUPPORT
+
+OSTYPE="unknown"
+
+case "`uname`" in
+  CYGWIN*) OSTYPE="cygwin" ;;
+  Darwin*)
+           OSTYPE="darwin"
+           if [ -z "$JAVA_HOME" ] && [ "$JAVACMD" = "auto" ];then
+             JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
+           fi
+           ;;
+esac
+
+# For Cygwin, ensure paths are in UNIX format before anything is touched
+if [ "$OSTYPE" = "cygwin" ]; then
+  [ -n "$HIPPO_HOME" ] &&
+    HIPPO_HOME="`cygpath --unix "$HIPPO_HOME"`"
+  [ -n "$JAVA_HOME" ] &&
+    JAVA_HOME="`cygpath --unix "$JAVA_HOME"`"
+  [ -n "$CLASSPATH" ] &&
+    CLASSPATH="`cygpath --path --unix "$CLASSPATH"`"
+fi
+
+# Detect the location of the java binary
+if [ -z "$JAVACMD" ] || [ "$JAVACMD" = "auto" ] ; then
+  if [ -n "$JAVA_HOME"  ] ; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+      # IBM's JDK on AIX uses strange locations for the executables
+      JAVACMD="$JAVA_HOME/jre/sh/java"
+    else
+      JAVACMD="$JAVA_HOME/bin/java"
+    fi
+  fi
+fi
+
+# Hm, we still do not know the location of the java binary
+if [ ! -x "$JAVACMD" ] ; then
+    JAVACMD=`which java 2> /dev/null `
+    if [ -z "$JAVACMD" ] ; then
+        JAVACMD=java
+    fi
+fi
+# Stop here if no java installation is defined/found
+if [ ! -x "$JAVACMD" ] ; then
+  echo "ERROR: Configuration variable JAVA_HOME or JAVACMD is not defined correctly."
+  echo "       (JAVA_HOME='$JAVAHOME', JAVACMD='$JAVACMD')"
+  exit 1
+fi
+
+echo "INFO: Using java '$JAVACMD'"
+
+if [ -z "$HIPPO_BASE" ] ; then
+  HIPPO_BASE="$HIPPO_HOME"
+fi
+
+# classpath
+HIPPO_CLASSPATH="$HIPPO_BASE/lib"
+LOGFILE="$HIPPO_BASE/logs/hippo_server.log"
+
+mkdir -p "$HIPPO_BASE/logs"
+
+# For Cygwin, switch paths to Windows format before running java if [ "$OSTYPE" = "cygwin" ]; then
+if [ "$OSTYPE" = "cygwin" ];then
+  HIPPO_HOME=`cygpath --windows "$HIPPO_HOME"`
+  HIPPO_BASE=`cygpath --windows "$HIPPO_BASE"`
+  HIPPO_CONF=`cygpath --windows "$HIPPO_CONF"`
+  HIPPO_DATA=`cygpath --windows "$HIPPO_DATA"`
+  HIPPO_CLASSPATH=`cygpath --path --windows "$HIPPO_CLASSPATH"`
+  JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
+  CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
+  CYGHOME=`cygpath --windows "$HOME"`
+  HIPPO_TMP=`cygpath --windows "$HIPPO_TMP"`
+  if [ -n "$CYGHOME" ]; then
+      HIPPO_CYGWIN="-Dcygwin.user.home=\"$CYGHOME\""
+  fi
+fi
+
+# Set default classpath
+# Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
+HIPPO_CLASSPATH="${HIPPO_CONF}:${HIPPO_CLASSPATH}"
+
+# Start the Hippo JAR
+#
+#
+# @ARG1 : the name of the PID-file
+#         If specified, this function starts the java process in background as a daemon
+#         and stores the pid of the created process in the file.
+#         Output on stdout/stderr will be supressed if this parameter is specified
+# @RET  : If unless 0 something went wrong
+#
+# Note: This function uses a lot of globally defined variables
+# - if $HIPPO_USER is set, the function tries starts the java process whith the specified
+#   user
+invokeJar(){
+   PIDFILE="$1"
+   RET="1"
+
+   setCurrentUser
+
+   if ( [ -z "$HIPPO_USER" ] || [ "$HIPPO_USER" = "$CUSER" ] );then
+      DOIT_PREFIX="sh -c "
+      DOIT_POSTFIX=";"
+   elif [ "`id -u`" = "0" ];then
+      DOIT_PREFIX="su -c "
+      DOIT_POSTFIX=" - $HIPPO_USER"
+      echo "INFO: changing to user '$HIPPO_USER' to invoke java"
+   fi
+   # Execute java binary
+   if [ -n "$PIDFILE" ] && [ "$PIDFILE" != "stop" ];then
+      $DOIT_PREFIX "$JAVACMD $HIPPO_OPTS $HIPPO_DEBUG_OPTS \
+              -Dhippo.classpath=\"${HIPPO_CLASSPATH}\" \
+              -Dhippo.home=\"${HIPPO_HOME}\" \
+              -Dhippo.base=\"${HIPPO_BASE}\" \
+              -Dhippo.conf=\"${HIPPO_CONF}\" \
+              -Dhippo.data=\"${HIPPO_DATA}\" \
+              $HIPPO_CYGWIN \
+              -classpath \"${HIPPO_CONF}\" \"com.hippo.bootstrap.Main\" $COMMANDLINE_ARGS 2>&1 >/dev/null &
+              RET=\"\$?\"; APID=\"\$!\";
+              echo \$APID > $PIDFILE;
+              echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
+      RET="$?"
+   elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
+          PID=`cat $HIPPO_PIDFILE`
+          $DOIT_PREFIX "$JAVACMD $HIPPO_OPTS $HIPPO_DEBUG_OPTS \
+              -Dhippo.classpath=\"${HIPPO_CLASSPATH}\" \
+              -Dhippo.home=\"${HIPPO_HOME}\" \
+              -Dhippo.base=\"${HIPPO_BASE}\" \
+              -Dhippo.conf=\"${HIPPO_CONF}\" \
+              -Dhippo.data=\"${HIPPO_DATA}\" \
+              $HIPPO_CYGWIN \
+              -classpath \"${HIPPO_CONF}\" \"com.hippo.bootstrap.Main\" $COMMANDLINE_ARGS --pid $PID &
+              RET=\"\$?\"; APID=\"\$!\";
+              echo \$APID > $HIPPO_DATA/stop.pid; exit \$RET" $DOIT_POSTFIX
+      RET="$?"
+   else
+      $DOIT_PREFIX "$JAVACMD $HIPPO_OPTS $HIPPO_DEBUG_OPTS \
+              -Dhippo.classpath=\"${HIPPO_CLASSPATH}\" \
+              -Dhippo.home=\"${HIPPO_HOME}\" \
+              -Dhippo.base=\"${HIPPO_BASE}\" \
+              -Dhippo.conf=\"${HIPPO_CONF}\" \
+              -Dhippo.data=\"${HIPPO_DATA}\" \
+              $HIPPO_CYGWIN \
+              -classpath \"${HIPPO_CONF}\" \"com.hippo.bootstrap.Main\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
+      RET="$?"
+   fi
+   return $RET
+}
+
+# Check if Hippo is running
+#
+# @RET  : 0 => the hippo process is running
+#         1 => process id in $HIPPO_PIDFILE does not exist anymore
+#         2 => something is wrong with the pid file
+#
+# Note: This function uses globally defined variables
+# - $HIPPO_PIDFILE : the name of the pid file
+
+
+checkRunning(){
+    if [ -f "$HIPPO_PIDFILE" ]; then
+       if  [ -z "`cat $HIPPO_PIDFILE`" ];then
+        echo "ERROR: Pidfile '$HIPPO_PIDFILE' exists but contains no pid"
+        return 2
+       fi
+       PID=`cat $HIPPO_PIDFILE`
+       RET=`ps -p $PID|grep java`
+       if [ -n "$RET" ];then
+         return 0;
+       else
+         return 1;
+       fi
+    else
+         return 1;
+    fi
+}
+
+checkStopRunning(){
+    PID=$HIPPO_DATA/stop.pid
+    if [ -f "$PID" ]; then
+       if  [ -z "`cat $PID`" ];then
+        echo "ERROR: Pidfile '$PID' exists but contains no pid"
+        return 2
+       fi
+       THEPID=`cat $PID`
+       RET=`ps -p $THEPID|grep java`
+       if [ -n "$RET" ];then
+         return 0;
+       else
+         return 1;
+       fi
+    else
+         return 1;
+    fi
+}
+
+# Check if Hippo is running
+#
+# @RET  : 0 => the hippo process is running
+#         1 => the hippo process is not running
+#
+# Note: This function uses globally defined variables
+# - $HIPPO_PIDFILE : the name of the pid file
+
+
+invoke_status(){
+    if ( checkRunning );then
+         PID=`cat $HIPPO_PIDFILE`
+         echo "Hippo is running (pid '$PID')"
+         exit 0
+    fi
+    echo "Hippo not running"
+    exit 1
+}
+
+# Start Hippo if not already running
+#
+# @RET  : 0 => is now started, is already started
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $HIPPO_PIDFILE      : the name of the pid file
+# - $HIPPO_OPTS         : Additional options
+# - $HIPPO_SUNJMX_START : options for JMX settings
+# - $HIPPO_SSL_OPTS     : options for SSL encryption
+
+invoke_start(){
+    if ( checkRunning );then
+      PID=`cat $HIPPO_PIDFILE`
+      echo "INFO: Process with pid '$PID' is already running"
+      exit 0
+    fi
+
+    HIPPO_OPTS="$HIPPO_OPTS $HIPPO_SUNJMX_START $HIPPO_SSL_OPTS -Djava.io.tmpdir=\"${HIPPO_TMP}\""
+
+    echo "INFO: Starting - inspect logfiles specified in logging.properties and logback.xml/log4j.properties to get details"
+    invokeJar $HIPPO_PIDFILE
+    exit "$?"
+}
+
+# Start Hippo in foreground (for debugging)
+#
+# @RET  : 0 => is now started, is already started
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $HIPPO_PIDFILE      : the name of the pid file
+# - $HIPPO_OPTS         : Additional options
+# - $HIPPO_SUNJMX_START : options for JMX settings
+# - $HIPPO_SSL_OPTS     : options for SSL encryption
+
+invoke_console(){
+    if ( checkRunning );then
+      echo "ERROR: Hippo is already running"
+      exit 1
+    fi
+
+    HIPPO_OPTS="$HIPPO_OPTS $HIPPO_SUNJMX_START $HIPPO_SSL_OPTS -Djava.io.tmpdir=\"${HIPPO_TMP}\""
+
+    COMMANDLINE_ARGS="start `echo $COMMANDLINE_ARGS|sed 's,^console,,'`"
+    echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
+    invokeJar
+    exit "$?"
+}
+
+# Stop Hippo
+#
+# @RET  : 0 => stop was successful
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $HIPPO_PIDFILE         : the name of the pid file
+# - $HIPPO_KILL_MAXSECONDS : the number of seconds to wait for termination of broker after sending
+#                              shutdown signal by jmx interface
+
+invoke_stop(){
+    RET="1"
+    if ( checkRunning );then
+       HIPPO_OPTS="$HIPPO_OPTS $HIPPO_SSL_OPTS"
+       COMMANDLINE_ARGS="$COMMANDLINE_ARGS $HIPPO_SUNJMX_CONTROL"
+       invokeJar "stop"
+       RET="$?"
+       PID=`cat $HIPPO_PIDFILE`
+       echo "INFO: Waiting at least $HIPPO_KILL_MAXSECONDS seconds for regular process termination of pid '$PID' : "
+       FOUND="0"
+       i=1
+       while [ $i != $HIPPO_KILL_MAXSECONDS ]; do
+
+         if [ ! checkStopRunning ];then
+            if [ ! checkRunning ]; then
+               echo " FINISHED"
+               FOUND="1"
+            fi
+            break
+         fi
+
+         if (checkRunning);then
+            sleep 1
+            printf  "."
+         else
+            echo " FINISHED"
+            FOUND="1"
+            break
+         fi
+         i=`expr $i + 1`
+       done
+       if [ "$FOUND" -ne "1" ];then
+         echo
+         echo "INFO: Regular shutdown not successful,  sending SIGKILL to process with pid '$PID'"
+         kill -KILL $PID
+         RET="1"
+       fi
+    elif [ -f "$HIPPO_PIDFILE" ];then
+       echo "ERROR: No or outdated process id in '$HIPPO_PIDFILE'"
+       echo
+       echo "INFO: Removing $HIPPO_PIDFILE"
+    else
+       echo "Hippo not running"
+       exit 0
+    fi
+    rm -f $HIPPO_PIDFILE >/dev/null 2>&1
+    rm -f $HIPPO_DATA/stop.pid >/dev/null 2>&1
+    exit $RET
+}
+
+# Invoke a task on a running Hippo instance
+#
+# @RET  : 0 => successful
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $HIPPO_QUEUEMANAGERURL : The url of the queuemanager
+# - $HIPPO_OPTS            : Additional options
+# - $HIPPO_SUNJMX_START    : options for JMX settings
+# - $HIPPO_SSL_OPTS        : options for SSL encryption
+invoke_task(){
+    # call task in java binary
+    if ( checkRunning );then
+      if [ "$1" = "browse" ] && [ -n "$HIPPO_QUEUEMANAGERURL" ];then
+         HIPPO_OPTS="$HIPPO_OPTS $HIPPO_SSL_OPTS"
+         COMMANDLINE_ARGS="$1 $HIPPO_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
+      elif [ "$1" = "query" ]  && [ -n "$HIPPO_QUEUEMANAGERURL" ];then
+         HIPPO_OPTS="$HIPPO_OPTS $HIPPO_SSL_OPTS"
+         COMMANDLINE_ARGS="$1 $HIPPO_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
+      else
+         HIPPO_OPTS="$HIPPO_OPTS $HIPPO_SSL_OPTS"
+         COMMANDLINE_ARGS="$COMMANDLINE_ARGS $HIPPO_SUNJMX_CONTROL"
+      fi
+      invokeJar
+      exit $?
+    else
+      invokeJar
+      exit 1
+    fi
+}
+
+show_help() {
+  invokeJar
+  RET="$?"
+  cat << EOF
+Tasks provided by the sysv init script:
+    restart         - stop running instance (if there is one), start new instance
+    console         - start broker in foreground, useful for debugging purposes
+    status          - check if hippo process is running
+    setup           - create the specified configuration file for this init script
+                      (see next usage section)
+
+Configuration of this script:
+    The configuration of this script can be placed on /etc/default/hippo or $HOME/.hipporc.
+    To use additional configurations for running multiple instances on the same operating system
+    rename or symlink script to a name matching to hippo-instance-<INSTANCENAME>.
+    This changes the configuration location to /etc/default/hippo-instance-<INSTANCENAME> and
+    \$HOME/.hipporc-instance-<INSTANCENAME>. Configuration files in /etc have higher precedence.
+EOF
+  exit $RET
+}
+
+# ------------------------------------------------------------------------
+# MAIN
+
+# show help
+if [ -z "$1" ];then
+ show_help
+fi
+
+case "$1" in
+  status)
+      invoke_status
+    ;;
+  restart)
+    if ( checkRunning );then
+      $0 stop
+    fi
+    $0 status
+    $0 start
+    $0 status
+    ;;
+  start)
+    invoke_start
+    ;;
+  console)
+    invoke_console
+    ;;
+  stop)
+    invoke_stop
+    ;;
+  *)
+    invoke_task
+esac

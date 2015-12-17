@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.0">
+	<deployment>
+		<!-- Exclusions allow you to prevent the server from automatically adding 
+			some dependencies -->
+		<exclusions>
+			<module name="org.apache.cxf" />
+			<module name="org.jboss.ws.cxf.jbossws-cxf-transports-httpserver" />
+			<module name="org.jboss.ws.cxf.jbossws-cxf-server" />
+			<module name="org.jboss.ws.cxf.jbossws-cxf-factories" />
+			<module name="org.jboss.ws.cxf.jbossws-cxf-client" />
+			<module name="org.jboss.ws.jaxws-jboss-httpserver-httpspi" />
+			<module name="org.jboss.as.webservices" />
+			<module name="org.jboss.ws.cxf" />
+			<module name="org.jboss.ws.jaxws-client" />
+			<module name="org.slf4j" />
+            <module name="org.slf4j.impl" />
+			
+		</exclusions>
+		
+		<!-- <dependencies>
+			<module name="org.springframework" slot="3.2.3.RELEASE"
+				export="true">
+				<imports>
+					<include path="META-INF**" />
+					<include path="org**" />
+				</imports>
+			</module>
+		</dependencies> -->
+	</deployment>
+</jboss-deployment-structure>
