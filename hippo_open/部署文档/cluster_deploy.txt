@@ -1,0 +1,50 @@
+1.修改hippo/hippo.run/conf/hippo-single.properties
+
+涉及的通用项修改如下:
+broker.name = {broker_name}
+broker.uris = hippo://{hostip}:61000
+broker.type = ccluster
+cluster.name = {ccluster_name}
+zk.url = {zookeeper}
+jmx.connector.host = {hostip}
+
+mdb引擎对应的配置项:
+#mdb store engine config
+db.limit = {capacity}  例:5g 使用内存的空间大小
+
+桶号,在集群模式下可以将此配置项注释
+db.buckets = 0         
+
+过期处理配置项目,每个不同的分片size,处理验证的数据数量
+store.expire.count.limit = 512
+
+lru配置项,数据满了以后,将会根据每个分片的过期时间排列,取出前30%的数据空间作为lru使用的空间
+store.lru.fate = 0.3
+
+
+
+使用levelDB的配置项
+db.limit = {capacity} 例子:100g  使用硬盘的空间大小
+
+是否使用mdb引擎作为levelDB的缓存
+leveldb.mdb.use.flag = true  
+
+mdb引擎的缓存大小
+leveldb.mdb.use.limit = {mdbcapacity}  例子2g
+
+
+
+2.修改hippo/hippo.run/bin/hippo
+-XX:MaxDirectMemorySize=?g  建议值为mdb的使用值加上分配netty的1G使用堆外空间
+
+
+在集群的模式下使用hippo,无需在配置项中指定对应的引擎,该引擎是在console中配置,但是其引擎对应的配置项还是要打开和配置好
+
+
+启动顺序:
+1. hippoConsoleweb
+
+2. 在hippo的console添加集群的信息 (请参考集群信息添加文档)
+
+3. levelDB or mdb
+
