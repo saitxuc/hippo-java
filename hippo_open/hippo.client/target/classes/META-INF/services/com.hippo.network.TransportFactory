@@ -1,2 +1,0 @@
-com.hippo.client.transport.nio.HippoNioTransportFactory
-com.hippo.client.transport.nio.DisruptorNioTransportFactory
