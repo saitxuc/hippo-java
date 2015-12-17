@@ -24,7 +24,6 @@
 <!-- 		<property name="password" value="Iamsure$12345654"></property> -->
 <!-- 	</bean> -->
 
-	<!-- stg5 -->
 	<bean id="dataSources" class="org.springframework.jndi.JndiObjectFactoryBean">
 		<property name="jndiName" value="java:jboss/datasources/hippoDS">
 		</property>
