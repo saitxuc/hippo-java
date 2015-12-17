@@ -1,3 +1,0 @@
-com.pinganfu.hippo.network.transport.nio.NettyTransportFactory
-com.pinganfu.hippo.network.transport.nio.RecoveryTransportFactory
-com.pinganfu.hippo.network.transport.failover.FailoverTransportFactory

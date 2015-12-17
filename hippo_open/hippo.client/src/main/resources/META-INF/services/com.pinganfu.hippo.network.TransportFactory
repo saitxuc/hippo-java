@@ -1,2 +1,0 @@
-com.pinganfu.hippo.client.transport.nio.HippoNioTransportFactory
-com.pinganfu.hippo.client.transport.nio.DisruptorNioTransportFactory
