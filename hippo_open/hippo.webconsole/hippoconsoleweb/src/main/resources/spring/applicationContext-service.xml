@@ -1,4 +1,4 @@
-﻿<!-- Application context definition. -->
+<!-- Application context definition. -->
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
@@ -12,7 +12,7 @@
 	http://www.springframework.org/schema/aop
 	http://www.springframework.org/schema/jdbc/spring-jdbc.xsd"
 	default-autowire="byName">
-	<context:property-placeholder location="file:/wls/wls81/envconfig/hippoconsoleweb/env.properties" />
+	<context:property-placeholder location="file:/opt/envconfig/hippoconsoleweb/env.properties" />
 	<context:annotation-config />
 	<!-- add by gushijie 2015-03-10 -->
 	<bean id="serverInfoInterface" class="com.hippoconsoleweb.service.impl.ServerInfoInterfaceImpl" />
