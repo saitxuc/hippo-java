@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ZkTablesInfoDo">
+	<resultMap type="ZkTablesInfoDo" id="ZkTablesInfoDoMap">
+		<id column="id" property="id" />
+		<result column="type" property="clusterName" />
+		<result column="createDate" property="createDate" />
+		<result column="df" property="df" />
+		<result column="content" property="content" />
+		<result column="zkClusterId" property="zkClusterId" />
+	</resultMap>
+
+	<!-- select list -->
+    <select id="selectTablesList" resultType="ZkTablesInfoDo" parameterType="ZkTablesInfoDo">
+    	select id,type,content,createDate,df,zkClusterId from hippo_zk_tables
+    	where df = #{df}
+    	
+    	<if test="type !=null and type !=''">
+    		and type = #{type}
+    	</if>
+    	
+    	<if test="zkClusterId !=null and zkClusterId !='' and zkClusterId > 0" >
+    		and zkClusterId = #{zkClusterId}
+    	</if>
+    	
+    	order by type desc 
+    	
+    </select>
+    
+    <!-- insert -->
+    <insert id="insertTablesList" parameterType="ZkTablesInfoDo" useGeneratedKeys="true" keyProperty="id">
+    	insert into hippo_zk_tables (type,content,createDate,df,zkClusterId) 
+    	values 
+    	(#{type},'${content}',now(),#{df},#{zkClusterId})
+    </insert>
+    
+    <!-- select one  -->
+    <select id="selectOneTables" parameterType="ZkTablesInfoDo" resultType="ZkTablesInfoDo">
+    	select id,type,content,createDate,df,zkClusterId from hippo_zk_tables 
+    	where 
+    	id = #{id}
+    </select>
+    
+    <!-- delete -->
+    <update id="deleteTables" parameterType="ZkTablesInfoDo">
+    	update hippo_zk_tables set  df = #{df} where id = #{id}
+    </update>
+    
+    
+    <!-- update -->
+    <update id="updateTablesList" parameterType="ZkTablesInfoDo">
+    	update hippo_zk_tables set 
+    	<trim suffix=" " suffixOverrides=",">
+    	<if test="networkPort !=null and networkPort !=''">
+    		type = #{type} ,
+    	</if>
+    	<if test="content !=null and content !='' ">
+    		content = #{content} ,
+    	</if>
+    	
+    	</trim>
+    	where id = #{id}
+    </update>
+	
+</mapper>
+

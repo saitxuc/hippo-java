@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN" >
+  
+ <head>
+    <meta charset="utf-8">
+    <link rel="hippo icon" href="../img/favicon.ico">
+    <title>Hippo Console Cluster</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	<link href="../css/style.css" rel="stylesheet" type="text/css">   
+    <link href="../css/font-awesome.css" rel="stylesheet">
+    <link href="../css/hippo.css" rel="stylesheet" type="text/css">
+    <link href="../js/easyUI/themes/ui-cupertino/easyui.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    
+
+
+  </head>
+
+<body >
+
+<div class="navbar navbar-fixed-top">
+	
+	<div class="navbar-inner">
+		
+		<div class="container" style="width:1200px">
+			
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</a>
+			
+			<a class="brand" href="cluster">
+				HIPPO CONSOLE WEB			
+			</a>		
+			
+			<div class="pull-right" style="padding: 7px 0;">
+				<font style="color:white">
+				<i class="icon-user"></i> ${userName}	 [ <a href="#" onclick="window.location='../index/logout'" style="color:#FFFFFF">Logout</a> ]
+				</font>
+			</div>
+	
+		</div>
+		
+	</div>
+	
+</div>
+    
+<div class="subnavbar">
+
+	<div class="subnavbar-inner">
+	
+		<div class="container" style="width:1200px">
+
+			<ul class="mainnav" style="width:1200px">
+			
+				<li >
+					<a href="cluster">
+						<i class="icon-list"></i>
+						<span>Cluster</span>
+					</a>	    				
+				</li>
+				
+				
+				<li >
+					<a href="dataService">
+						<i class="icon-th-large"></i>
+						<span>DataService</span>
+					</a>    				
+				</li>
+				
+				<li class="active">					
+					<a href="zookeeper">
+						<i class="icon-sitemap"></i>
+						<span>Zookeeper</span>
+					</a>  									
+				</li>
+                
+                
+                <li >					
+					<a href="zkBackUp">
+						<i class="icon-table"></i>
+						<span>ZkBackUp</span>
+					</a>  									
+				</li>
+                
+                
+                <li >					
+					<a href="machine">
+						<i class="icon-table"></i>
+						<span >Machine</span>
+					</a>  									
+				</li>
+			
+			</ul>
+
+		</div> 
+	
+	</div>
+
+</div>
+    
+
+    
+<div class="main">
+	<div class="main-inner">
+	    <div class="container" style="width:1200px">
+		     <div class="row">
+		      	<div class="span4" class="widget">
+			      	<div class="widget-content" style="height:600px">
+			      	<div align="center">
+			     	<input type="text" id="clusterName" name="clusterName" style="width:110px"/>
+			     	<input type="button" value="数据重置" class="btn"  onclick="dataReset()"/>
+					<input type="button" value="刷新" class="btn" onclick="treeReload()"/>
+					
+					</div>
+			      		<div style="overflow:auto;float:left;width:230px;height:540px;" id="zkDiv">
+							<ul id="zkTree" ></ul>
+						</div>
+			      	</div>
+	         	</div>
+	         	
+	         	<div class="span11">
+	         		<div class="widget-content" >
+			      	<div  id="resultSTr" style="width: 820px;height:150px; overflow:auto;float:left"></div>
+     				<div id="resultTable" style="width: 820px;height:400px; overflow:auto;float:left"></div>
+			      	</div>
+	         	</div>
+        	</div>
+	    </div>
+	</div>
+</div>
+
+<div ng-include="'../index/modalIncludePage'"></div>
+
+<div class="footer">
+	
+	<div class="footer-inner">
+		
+		<div class="container">
+			
+			<div class="row">
+				
+    			<div class="span12">
+    				&copy; 2015 <a href="#">上海平安付  HIPPO CONSOLE WEB</a>.
+    			</div>
+    			
+    		</div>
+    		
+		</div>
+		
+	</div>
+	
+</div>
+<script src="../js/jquery/jquery-2.1.4.min.js"></script>
+<script src="../js/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../js/easyUI/easyloader.js"></script>
+<script type="text/javascript" src="../js/easyUI/jquery.easyui.min.js"></script>
+<script src="../js/excanvas.min.js"></script>
+<script src="../js/script/bulidTable.js"></script>
+<script src="../js/script/zookeeper.js"></script>
+
+</body>
+
+</html>
