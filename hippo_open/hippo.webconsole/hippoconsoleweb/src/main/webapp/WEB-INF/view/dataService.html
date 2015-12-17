@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN" ng-app="dataServiceApp">
+  
+ <head>
+    <meta charset="utf-8">
+    <link rel="hippo icon" href="../img/favicon.ico">
+    <title>Hippo Console Cluster</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	<link href="../css/style.css" rel="stylesheet" type="text/css">   
+    <link href="../css/font-awesome.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    
+
+
+  </head>
+
+<body ng-controller="dataServiceController">
+
+
+
+<div class="navbar navbar-fixed-top">
+	
+	<div class="navbar-inner">
+		
+		<div class="container" style="width:1200px">
+			
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</a>
+			
+			<a class="brand" href="cluster">
+				HIPPO CONSOLE WEB			
+			</a>		
+			
+			<div class="pull-right" style="padding: 7px 0;">
+				<font style="color:white">
+				<i class="icon-user"></i> ${userName}	 [ <a href="#" onclick="window.location='../index/logout'" style="color:#FFFFFF">Logout</a> ]
+				</font>
+			</div>
+	
+		</div>
+		
+	</div>
+	
+</div>
+
+
+    
+<div class="subnavbar" >
+
+	<div class="subnavbar-inner">
+	
+		<div class="container" style="width:1200px">
+
+			<ul class="mainnav" style="width:1200px">
+			
+				<li >
+					<a href="cluster">
+						<i class="icon-list"></i>
+						<span>Cluster</span>
+					</a>	    				
+				</li>
+				
+				
+				<li class="active" >
+					<a href="dataService">
+						<i class="icon-th-large"></i>
+						<span>DataService</span>
+					</a>    				
+				</li>
+				
+				<li >					
+					<a href="zookeeper">
+						<i class="icon-sitemap"></i>
+						<span>Zookeeper</span>
+					</a>  									
+				</li>
+                
+                
+                <li >					
+					<a href="zkBackUp">
+						<i class="icon-table"></i>
+						<span>ZkBackUp</span>
+					</a>  									
+				</li>
+                
+                
+                <li >					
+					<a href="machine">
+						<i class="icon-table"></i>
+						<span >Machine</span>
+					</a>  									
+				</li>
+			
+			</ul>
+
+		</div> 
+	
+	</div>
+	<div id="loading-frame">
+	    <div id="loading-wrap">
+	        <div class="progress progress-striped active">
+	            <div class="bar" style="width: 0%;"></div>
+	        </div>
+	    </div>
+	</div>
+
+</div>
+    
+
+    
+<div class="main">
+	<div class="main-inner">
+	    <div class="container" style="width:1220px">
+		     <div class="row">
+		    	<div class="span12" style="width:1220px">
+		     	<div class="info-box">
+		     	<div class="widget widget-table action-table">
+			       <div class="widget-header">
+			            <i class="icon-th-list"></i>
+			              <h3>DataServer列表</h3>
+			            <div style="float:right">
+			            <a href="#" class="btn btn-small btn-invert" ng-click="search()">查询条件</a> |
+			            <a href="#" class="btn btn-small btn-invert" ng-click="addWin()">新 增</a> &nbsp;
+			            </div>
+			        </div>
+			        <div class="widget-content alert" style="width:1218px">
+			        	<br>
+			        	<div ng-repeat="record in records track by record.id">
+	      				<div class="span5 "  >
+     						<div class="widget">
+     							<div class="widget-content alert" id="div_{{record.id}}">
+	      							<table height="115px" cellspacing="0" cellpadding="0" width="100%" >
+	      								<tr><td align="right"><b>IP:&nbsp;</b></td><td align="left">{{record.server_id}}</td></tr>
+	      								<tr><td align="right"><b>BrokerName:&nbsp;</b></td><td align="left">{{record.brokerName}}</td></tr>
+	      								<tr><td align="right"><b>BrokerVersion:&nbsp;</b></td><td align="left">{{record.brokerVersion}}</td></tr>
+	      								<tr><td align="right"><b>cluster:&nbsp;</b></td><td align="left">{{record.clusterName}}</td></tr>
+	      								<tr><td align="right"><b>status:&nbsp;</b></td><td align="left">{{record.status | filterStatus}}</td></tr>
+	      								<tr><td align="right"><b>bucket:&nbsp;</b></td><td align="left"><div style="float:left">{{record.bucketCount}}</div>
+	      								<div style="float:right">
+	      								<a href="#" title="查看" ng-click="view(record.id)"> <i class="icon-share"></i></a>
+	      								<a href="#" title="修改" ng-click="toedit(record.id)"> <i class="icon-wrench"></i></a>
+	      								<a href="#" title="刷新" ng-click="refrash(record.id)"> <i class="icon-refresh"></i></a>
+	      								<a href="#" title="删除" ng-click="del(record.id)"> <i class="icon-trash"></i>&nbsp;</a>
+	      								</div></td></tr>
+	      							</table>
+	      						</div>
+	      					</div>
+	      				</div>
+	      				</div>
+			        </div>
+	      			
+	    		</div>
+	    	</div>
+	    	
+	      	<center>
+			<div class='pagination'>
+	              <ul>
+	              	<li ng-class="{true:'active'}[currentPage==1]"><a href='#' ng-click="loadPage(1)">首页</a></li>
+	                  <li ng-class="{true:'disabled'}[currentPage==1]"><a href='#' ng-click="prev()">上一页</a></li>
+	                  <li ng-repeat="page in pages" ng-class="{true:'disabled'}[currentPage==page]"><a href='#' ng-click="loadPage(page)">{{page}}</a></li>
+	                  <li ng-class="{true:'disabled'}[currentPage==totalPage]"><a href='#' ng-click="next()">下一页</a></li>
+	                  <li ng-class="{true:'active'}[currentPage==totalPage]"><a href='#' ng-click="loadPage(totalPage)">尾页</a></li>
+	              </ul>
+	          	</div>
+			</center>
+			</div>
+      		</div>
+      	</div>
+	</div>
+</div>
+
+
+<!-- Windows view start -->
+<div class='modal hide fade' id='recordView' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>构建表</h3>
+    </div>
+  	<div class='modal-body alert' >
+  		<div class="widget-header">
+			<i class="icon-pushpin"></i>
+			<h3>Broker</h3>
+		</div>
+  		<div class="widget-content">
+      	<table width="100%" class="table table-bordered">
+      		<tr>
+      			<td  width="20%"><font size="2" ><b>ClusterName:</b></font></td>
+	      		<td  width="30%">{{info.clusterName}}</td>
+	      		<td  width="20%"><font size="2" ><b>ServerId:</b></font></td>
+	      		<td  width="30%">{{info.server_id}}</td>
+	      	</tr>
+	      	<tr>
+      			<td ><font size="2" ><b>BrokerName:</b></font></td>
+	      		<td >{{info.brokerName}}</td>
+	      		<td ><font size="2" ><b>BrokerVersion:</b></font></td>
+	      		<td >{{info.brokerVersion}}</td>
+	      	</tr>
+	      	<tr>
+      			<td ><font size="2" ><b>DataDirectory:</b></font></td>
+	      		<td >{{info.dataDirectory}}</td>
+	      		<td ><font size="2" ><b>Started:</b></font></td>
+	      		<td >{{info.started}}</td>
+	      	</tr>
+	      	<tr>
+      			<td ><font size="2" ><b>MemoryLimit:</b></font></td>
+	      		<td >{{info.memoryLimit}}</td>
+	      		<td ><font size="2" ><b>MemoryPercentUsage:</b></font></td>
+	      		<td >{{info.memoryPercentUsage}}</td>
+	      	</tr>
+	      	<tr>
+      			<td ><font size="2" ><b>StoreLimit:</b></font></td>
+	      		<td >{{info.storeLimit}}</td>
+	      		<td ><font size="2" ><b>StorePercentUsage:</b></font></td>
+	      		<td >{{info.storePercentUsage}}</td>
+	      	</tr>
+	      	<tr>
+      			<td ><font size="2" ><b>Bucket Count:</b></font></td>
+	      		<td >{{info.bucketCount}}</td>
+	      		<td ><font size="2" ><b>Status:</b></font></td>
+	      		<td >{{info.status | filterStatus}}</td>
+	      	</tr>
+	      	<tr>
+      			<td ><font size="2" ><b>Master Bucket:</b></font></td>
+	      		<td >{{info.masterBucket}}</td>
+	      		<td ><font size="2" ><b>Slave Bucket:</b></font></td>
+	      		<td >{{info.slaveBucket}}</td>
+	      	</tr>
+      	</table>
+      	</div>
+      	<br>
+      	<div class="widget-header">
+			<i class="icon-pushpin"></i>
+			<h3>StoreEngineAdapter</h3>
+		</div>
+  		<div class="widget-content">
+      	<table width="100%" class="table table-bordered">
+      		<tr>
+	      		<td width="20%"><font size="2" ><b>Data:</b></font></td>
+	      		<td width="30%">{{storeInfo.engineData}}</td>
+	      		<td width="20%"><font size="2" ><b>CurrentUsedCapacity:</b></font></td>
+	      		<td width="30%">{{storeInfo.currentUsedCapacity}}</td>
+      		</tr>
+      		<tr>
+	      		<td width="20%"><font size="2" ><b>name:</b></font></td>
+	      		<td width="30%">{{storeInfo.engineName}}</td>
+	      		<td width="20%"><font size="2" ><b>size</b></font></td>
+	      		<td width="30%">{{storeInfo.engineSize}}</td>
+      		</tr>
+      	</table>
+      	</div>
+      	
+      	<br>
+      	<div class="widget-header">
+			<i class="icon-pushpin"></i>
+			<h3>clientConnectors</h3>
+		</div>
+  		<div class="widget-content">
+      	<table width="100%" class="table table-bordered">
+      		<tr>
+	      		<td ><center><font size="2" ><b>ObjectName</b></font></center></td>
+	      		<td ><center><font size="2" ><b>Started</b></font></center></td>
+	      		<td ><center><font size="2" ><b>StatisticsEnabled</b></font></center></td>
+	      		<td ><center><font size="2" ><b>Operation</b></font></center></td>
+      		</tr>
+      		<tbody>
+                 <tr ng-repeat="object in objects track by object.id" >
+                   <td><center>{{object.objectName}}</center></td>
+                   <td><center>{{object.connStarted}}</center></td>
+                   <td><center>{{object.connEnabled}}</center></td>
+                   <td><nobr><center>
+                   <a href="#" class="btn btn-small btn-primary" ng-click="getconnectionCount(info.server_id,object.objectName,info.id)">ConnectionCount</a>
+			       <a href="#" class="btn btn-small btn-primary" ng-click="selectedClient(info.server_id,object.objectName,info.id)">ClientView</a>
+                   </center></nobr></td>
+                 </tr>
+             </tbody>
+      	</table>
+      	</div>
+      	
+      	<br>
+      	<div class="widget-header">
+			<i class="icon-pushpin"></i>
+			<h3>client</h3>
+		</div>
+  		<div class="widget-content">
+      	<table width="100%" class="table table-bordered">
+      		<tr>
+	      		<td ><center><font size="2" ><b>ClientId</b></font></center></td>
+	      		<td ><center><font size="2" ><b>RemoteAddress</b></font></center></td>
+	      		<td ><center><font size="2" ><b>Connected</b></font></center></td>
+	      		<td ><center><font size="2" ><b>Active</b></font></center></td>
+	      		<td ><center><font size="2" ><b>Blocked</b></font></center></td>
+	      		<td ><center><font size="2" ><b>Slow</b></font></center></td>
+	      		<td ><center><font size="2" ><b>Operation</b></font></center></td>
+      		</tr>
+      		<tbody>
+                 <tr ng-repeat="clientRecord in clientRecords " >
+                   <td><center>{{clientRecord.clientId}}</center></td>
+                   <td><center>{{clientRecord.remoteAddress}}</center></td>
+                   <td><center>{{clientRecord.connected}}</center></td>
+                   <td><center>{{clientRecord.active}}</center></td>
+                   <td><center>{{clientRecord.blocked}}</center></td>
+                   <td><center>{{clientRecord.slow}}</center></td>
+                   <td><center>
+                   <a href="#" class="btn btn-small btn-primary" ng-click="getSessionCount(info.server_id,clientRecord.objectName,info.id)">SessionCount</a>
+                   </center></td>
+                 </tr>
+             </tbody>
+      	</table>
+      	</div>
+      	
+      	
+  	</div>
+</div>
+<!-- Windows table end -->
+
+
+<!-- Windows search start -->
+<div class='modal hide fade' id='recordSearch' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>集群查询条件</h3>
+    </div>
+  	<div class='modal-body'>
+      	<table width="100%">
+      		
+      		<tr>
+      		<td width="15%" align="right">Cluster Name :</td>
+      		<td width="35%" align="left"><select ng-model="search.clusterName" ng-options="cluster.name as cluster.name for cluster in clusterList"><option value="">--请选择--</option></select></td>
+      		<td width="15%" align="right">Broker Name :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="search.brokerName" /></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Status :</td>
+      		<td width="35%" align="left"><select ng-model="search.status" ng-options="stat.id as stat.name for stat in statusList"><option value="">--请选择--</option></select></td>
+      		<td width="15%" align="right">IP :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="search.ip" /></td>
+      		</tr>
+      	</table>
+  	</div>
+    <div class='modal-footer'>
+        <button class='btn' data-dismiss='modal'>Close</button>
+        <button class='btn btn-primary' ng-click="doSearch()">Search</button>
+    </div>
+</div>
+<!-- Windows search end -->
+
+<!-- Windows add start -->
+<div class='modal hide fade' id='recordAdd' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>创建DataServer</h3>
+    </div>
+  	<div class='modal-body alert'>
+      	<table width="100%">
+      		
+      		<tr>
+      		<td width="15%" align="right">Cluster Name :</td>
+      		<td width="35%" align="left"><select ng-model="add.clusterName" ng-options="cluster.id as cluster.name for cluster in clusterList"><option value="">--请选择--</option></select><font color="red"> *</font></td>
+      		<td width="15%" align="right">URL :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.url" placeholder='ip:port1:port2'/><font color="red"> *</font></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Jmx Port :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.jmxPort"  placeholder='Jmx Port'/><font color="red"> *</font></td>
+      		<td width="15%" align="right"></td>
+      		<td width="35%" align="left"></td>
+      		</tr>
+      		
+      		
+      		<tr>
+      		<td width="15%" align="right">Borker Name :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.borkerName" placeholder='Borker Name' /></td>
+      		<td width="15%" align="right">Broker Version :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.borkerVersion" placeholder='Borker Version' /></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Borker Count :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="add.bucketCount" placeholder='Bucket Count' ReadOnly/></td>
+      		<td width="15%" align="right"></td>
+      		<td width="35%" align="left"></td>
+      		</tr>
+      		
+      	</table>
+  	</div>
+    <div class='modal-footer'>
+        <button class='btn' data-dismiss='modal'>Close</button>
+        <button class='btn btn-primary' ng-click="doSave()">Save</button>
+    </div>
+</div>
+<!-- Windows add end -->
+
+
+<!-- Windows edit start -->
+<div class='modal hide fade' id='recordEdit' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h3>DataServer</h3>
+    </div>
+  	<div class='modal-body alert'>
+      	<table width="100%">
+      		
+      		<tr>
+      		<td width="15%" align="right">Cluster Name :</td>
+      		<td width="35%" align="left"><select ng-model="edit.clusterName" ng-options="cluster.id as cluster.name for cluster in clusterList"><option value="">--请选择--</option></select><font color="red"> *</font></td>
+      		<td width="15%" align="right">URL :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.url" placeholder='ip:port1:port2'/><font color="red"> *</font></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Jmx Port :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.jmxPort"  placeholder='Jmx Port'/><font color="red"> *</font></td>
+      		<td width="15%" align="right"></td>
+      		<td width="35%" align="left"></td>
+      		</tr>
+      		
+      		
+      		<tr>
+      		<td width="15%" align="right">Borker Name :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.brokerName" placeholder='Broker Name' /></td>
+      		<td width="15%" align="right">Broker Version :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.brokerVersion" placeholder='Broker Version' /></td>
+      		</tr>
+      		
+      		<tr>
+      		<td width="15%" align="right">Borker Count :</td>
+      		<td width="35%" align="left"><input type="text" ng-model="edit.bucketCount" placeholder='Bucket Count' ReadOnly/></td>
+      		<td width="15%" align="right"></td>
+      		<td width="35%" align="left"></td>
+      		</tr>
+      		
+      	</table>
+  	</div>
+    <div class='modal-footer'>
+        <button class='btn' data-dismiss='modal'>Close</button>
+        <button class='btn btn-primary' ng-click="doEditSave()">Save</button>
+    </div>
+</div>
+<!-- Windows add end -->
+
+
+<div ng-include="'../index/modalIncludePage'"></div>
+
+<div class="footer">
+	
+	<div class="footer-inner">
+		
+		<div class="container">
+			
+			<div class="row">
+				
+    			<div class="span12">
+    				&copy; 2015 <a href="#">上海平安付  HIPPO CONSOLE WEB</a>.
+    			</div>
+    			
+    		</div>
+    		
+		</div>
+		
+	</div>
+	
+</div>
+<script src="../js/jquery/jquery-2.1.4.min.js"></script>
+<script src="../js/angular-1.2.19/angular.min.js"></script>
+<script src="../js/bootstrap-3.3.5/js/bootstrap.min.js"></script> 
+<script src="../js/bootstrap/ui-bootstrap-tpls.min.js"></script>
+<script src="../js/excanvas.min.js"></script>
+<script type="text/javascript" src="../js/loading.js"></script>
+<script src="../js/script/dataService.js"></script>
+</body>
+
+</html>
