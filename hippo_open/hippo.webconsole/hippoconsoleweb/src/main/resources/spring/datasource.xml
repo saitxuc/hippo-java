@@ -38,7 +38,7 @@
 		<property name="configLocation" value="classpath:mybatis-config.xml" />
 <!-- 		<property name="plugins"> -->
 <!-- 			<list> -->
-<!-- 				<bean class="com.pinganfu.common.log.SQLLogInterceptor" /> -->
+<!-- 				<bean class="com.common.log.SQLLogInterceptor" /> -->
 <!-- 			</list> -->
 <!-- 		</property> -->
 	</bean>

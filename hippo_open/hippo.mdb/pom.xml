@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.pinganfu.hippo</groupId>
+		<groupId>com.hippo</groupId>
 		<artifactId>hippo.parent</artifactId>
 		<version>1.0.0-beta</version>
 	</parent>
@@ -17,13 +17,13 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.store</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.network</artifactId>
 			<version>${project.version}</version>
 		</dependency>

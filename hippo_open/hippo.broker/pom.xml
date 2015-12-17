@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.pinganfu.hippo</groupId>
+        <groupId>com.hippo</groupId>
         <artifactId>hippo.parent</artifactId>
         <version>1.0.0-beta</version>
     </parent>
 
-    <groupId>com.pinganfu.hippo</groupId>
+    <groupId>com.hippo</groupId>
     <artifactId>hippo.broker</artifactId>
     <name>hippo.broker</name>
     
@@ -34,7 +34,7 @@
         	<configuration>
           		<archive>
             			<manifest>
-              				<mainClass>com.pinganfu.hippo.bootstrap.Main</mainClass>
+              				<mainClass>com.hippo.bootstrap.Main</mainClass>
             			</manifest>
           		</archive>
         	</configuration>
@@ -46,31 +46,31 @@
     <dependencies>
         
         <dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.network</artifactId>
 			<version>${project.version}</version>
 		</dependency>
         
 	      <dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
         
         <dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.store</artifactId>
     		<version>${project.version}</version>
 		</dependency>
 		
         <dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.mdb</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		
 		<dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.leveldb</artifactId>
 			<version>${project.version}</version>
 		</dependency>

@@ -3,8 +3,8 @@ package com.test.mdb;
 import java.io.Serializable;
 import java.util.concurrent.CountDownLatch;
 
-import com.pinganfu.hippo.store.StoreEngine;
-import com.pinganfu.hippo.store.exception.HippoStoreException;
+import com.hippo.store.StoreEngine;
+import com.hippo.store.exception.HippoStoreException;
 
 public class TestObject implements Serializable{
 	private String value;

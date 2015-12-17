@@ -15,9 +15,9 @@
 	http://www.springframework.org/schema/jdbc/spring-jdbc.xsd"
 	default-autowire="byName">
 
-	<bean id="serverInfoDao" class="com.pinganfu.hippoconsoleweb.dal.impl.ServerInfoDaoImpl" />
-	<bean id="clusterInfoDao" class="com.pinganfu.hippoconsoleweb.dal.impl.ClusterInfoDaoImpl" />
-	<bean id="zkClusterInfoDao" class="com.pinganfu.hippoconsoleweb.dal.impl.ZkClusterInfoDaoImpl" />
-	<bean id="zkDataServersInfoDao" class="com.pinganfu.hippoconsoleweb.dal.impl.ZkDataServersDaoImpl" />
-	<bean id="zkTablesInfoDao" class="com.pinganfu.hippoconsoleweb.dal.impl.ZkTablesInfoDaoImpl" />
+	<bean id="serverInfoDao" class="com.hippoconsoleweb.dal.impl.ServerInfoDaoImpl" />
+	<bean id="clusterInfoDao" class="com.hippoconsoleweb.dal.impl.ClusterInfoDaoImpl" />
+	<bean id="zkClusterInfoDao" class="com.hippoconsoleweb.dal.impl.ZkClusterInfoDaoImpl" />
+	<bean id="zkDataServersInfoDao" class="com.hippoconsoleweb.dal.impl.ZkDataServersDaoImpl" />
+	<bean id="zkTablesInfoDao" class="com.hippoconsoleweb.dal.impl.ZkTablesInfoDaoImpl" />
 </beans>

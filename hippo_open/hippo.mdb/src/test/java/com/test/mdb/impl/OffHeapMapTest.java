@@ -11,10 +11,10 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
-import com.pinganfu.hippo.common.util.HashingUtil;
-import com.pinganfu.hippo.mdb.DBAssembleManager;
-import com.pinganfu.hippo.mdb.MdbManager;
-import com.pinganfu.hippo.mdb.obj.MdbPointer;
+import com.hippo.common.util.HashingUtil;
+import com.hippo.mdb.DBAssembleManager;
+import com.hippo.mdb.MdbManager;
+import com.hippo.mdb.obj.MdbPointer;
 
 /**
  * 

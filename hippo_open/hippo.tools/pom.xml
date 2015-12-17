@@ -4,7 +4,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<parent>
-		<groupId>com.pinganfu.hippo</groupId>
+		<groupId>com.hippo</groupId>
 		<artifactId>hippo.parent</artifactId>
 		<version>1.0.0-beta</version>
 	</parent>
@@ -22,7 +22,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>com.pinganfu.hippo.redis.ParserMain</mainClass>
+							<mainClass>com.hippo.redis.ParserMain</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -32,7 +32,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.client</artifactId>
 			<version>${project.version}</version>
 		</dependency>

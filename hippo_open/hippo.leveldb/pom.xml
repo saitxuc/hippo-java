@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.pinganfu.hippo</groupId>
+		<groupId>com.hippo</groupId>
 		<artifactId>hippo.parent</artifactId>
 		<version>1.0.0-beta</version>
 	</parent>
@@ -13,17 +13,17 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.store</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.mdb</artifactId>
 			<version>${project.version}</version>
 		</dependency>

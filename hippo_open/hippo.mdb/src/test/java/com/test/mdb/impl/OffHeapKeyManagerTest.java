@@ -5,14 +5,14 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.pinganfu.hippo.mdb.impl.OffHeapMap;
+import com.hippo.mdb.impl.OffHeapMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.pinganfu.hippo.common.domain.BucketInfo;
-import com.pinganfu.hippo.mdb.KeyManager;
-import com.pinganfu.hippo.mdb.MdbConstants;
-import com.pinganfu.hippo.mdb.MdbManager;
-import com.pinganfu.hippo.mdb.obj.MdbPointer;
+import com.hippo.common.domain.BucketInfo;
+import com.hippo.mdb.KeyManager;
+import com.hippo.mdb.MdbConstants;
+import com.hippo.mdb.MdbManager;
+import com.hippo.mdb.obj.MdbPointer;
 
 /**
  * 

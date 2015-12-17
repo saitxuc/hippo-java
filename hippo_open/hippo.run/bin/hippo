@@ -376,7 +376,7 @@ invokeJar(){
               -Dhippo.conf=\"${HIPPO_CONF}\" \
               -Dhippo.data=\"${HIPPO_DATA}\" \
               $HIPPO_CYGWIN \
-              -classpath \"${HIPPO_CONF}\" \"com.pinganfu.hippo.bootstrap.Main\" $COMMANDLINE_ARGS 2>&1 >/dev/null &
+              -classpath \"${HIPPO_CONF}\" \"com.hippo.bootstrap.Main\" $COMMANDLINE_ARGS 2>&1 >/dev/null &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > $PIDFILE;
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
@@ -390,7 +390,7 @@ invokeJar(){
               -Dhippo.conf=\"${HIPPO_CONF}\" \
               -Dhippo.data=\"${HIPPO_DATA}\" \
               $HIPPO_CYGWIN \
-              -classpath \"${HIPPO_CONF}\" \"com.pinganfu.hippo.bootstrap.Main\" $COMMANDLINE_ARGS --pid $PID &
+              -classpath \"${HIPPO_CONF}\" \"com.hippo.bootstrap.Main\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > $HIPPO_DATA/stop.pid; exit \$RET" $DOIT_POSTFIX
       RET="$?"
@@ -402,7 +402,7 @@ invokeJar(){
               -Dhippo.conf=\"${HIPPO_CONF}\" \
               -Dhippo.data=\"${HIPPO_DATA}\" \
               $HIPPO_CYGWIN \
-              -classpath \"${HIPPO_CONF}\" \"com.pinganfu.hippo.bootstrap.Main\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
+              -classpath \"${HIPPO_CONF}\" \"com.hippo.bootstrap.Main\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
       RET="$?"
    fi
    return $RET

@@ -1,9 +1,9 @@
 package com.test.mdb;
 
 import java.util.concurrent.ExecutorService;
-import com.pinganfu.hippo.common.util.ExcutorUtils;
-import com.pinganfu.hippo.mdb.MdbStoreEngine;
-import com.pinganfu.hippo.store.model.GetResult;
+import com.hippo.common.util.ExcutorUtils;
+import com.hippo.mdb.MdbStoreEngine;
+import com.hippo.store.model.GetResult;
 
 public class MdbStoreEngineAddUpdateValidation {
     public static void main(String[] args) {

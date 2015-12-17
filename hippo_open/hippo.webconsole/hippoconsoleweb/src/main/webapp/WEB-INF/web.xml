@@ -37,7 +37,7 @@
 	
 <!-- 	<servlet>   -->
 <!-- 	    <servlet-name>ServerTimeMonitorServlet</servlet-name>   -->
-<!-- 	    <servlet-class>com.pinganfu.hippoconsole.monitor.ServerTimeMonitorServlet</servlet-class>   -->
+<!-- 	    <servlet-class>com.hippoconsole.monitor.ServerTimeMonitorServlet</servlet-class>   -->
 <!-- 	    <init-param>   -->
 <!-- 	        <param-name>interval</param-name>   -->
 <!-- 	        <param-value>1</param-value>   -->
@@ -50,7 +50,7 @@
 	 
 <!-- 	 <filter> -->
 <!-- 	    <filter-name>ssosession</filter-name> -->
-<!-- 	    <filter-class>com.pinganfu.web.passport.PassportFilter</filter-class> -->
+<!-- 	    <filter-class>com.web.passport.PassportFilter</filter-class> -->
 <!-- 	 </filter> -->
 <!-- 	 <filter-mapping> -->
 <!--         <filter-name>ssosession</filter-name> -->

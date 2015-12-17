@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   
-  <groupId>com.pinganfu.hippoconsoleweb</groupId>
+  <groupId>com.hippoconsoleweb</groupId>
   <artifactId>hippoconsoleweb</artifactId>
   <packaging>war</packaging>
   <version>${hippo.version}</version>
@@ -38,7 +38,7 @@
   
   <dependencies>
     <dependency>
-			<groupId>com.pinganfu.hippo</groupId>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.client</artifactId>
 			<version>${hippo.version}</version>
 		</dependency>

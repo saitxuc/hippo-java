@@ -5,15 +5,15 @@
 		<setting name="lazyLoadingEnabled" value="false" />
 	</settings>
 	<typeAliases>
-		<typeAlias alias="serverInfoDo" type="com.pinganfu.hippoconsoleweb.model.ServerInfoDo"/>
-		<typeAlias alias="clusterInfoDo" type="com.pinganfu.hippoconsoleweb.model.ClusterInfoDo"/>
-		<typeAlias alias="zkClusterBackUpInfoDo" type="com.pinganfu.hippoconsoleweb.model.ZkClusterBackUpInfoDo"/>
-		<typeAlias alias="zkDataServersInfoDo" type="com.pinganfu.hippoconsoleweb.model.ZkDataServersInfoDo"/>
-		<typeAlias alias="zkTablesInfoDo" type="com.pinganfu.hippoconsoleweb.model.ZkTablesInfoDo"/>
+		<typeAlias alias="serverInfoDo" type="com.hippoconsoleweb.model.ServerInfoDo"/>
+		<typeAlias alias="clusterInfoDo" type="com.hippoconsoleweb.model.ClusterInfoDo"/>
+		<typeAlias alias="zkClusterBackUpInfoDo" type="com.hippoconsoleweb.model.ZkClusterBackUpInfoDo"/>
+		<typeAlias alias="zkDataServersInfoDo" type="com.hippoconsoleweb.model.ZkDataServersInfoDo"/>
+		<typeAlias alias="zkTablesInfoDo" type="com.hippoconsoleweb.model.ZkTablesInfoDo"/>
 	</typeAliases>
 
 <!-- 	<plugins> -->
-<!-- 		<plugin interceptor="com.pinganfu.common.log.SQLLogInterceptor" /> -->
+<!-- 		<plugin interceptor="com.common.log.SQLLogInterceptor" /> -->
 <!-- 	</plugins> -->
 
 </configuration>

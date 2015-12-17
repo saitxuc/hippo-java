@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import com.pinganfu.hippo.common.domain.BucketInfo;
-import com.pinganfu.hippo.common.util.ExcutorUtils;
-import com.pinganfu.hippo.mdb.MdbStoreEngine;
-import com.pinganfu.hippo.store.model.GetResult;
+import com.hippo.common.domain.BucketInfo;
+import com.hippo.common.util.ExcutorUtils;
+import com.hippo.mdb.MdbStoreEngine;
+import com.hippo.store.model.GetResult;
 
 public class MdbStoreEngineAddValidation {
     public static void main(String[] args) {

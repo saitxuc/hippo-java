@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-import com.pinganfu.hippo.common.domain.BucketInfo;
-import com.pinganfu.hippo.mdb.MdbStoreEngine;
-import com.pinganfu.hippo.store.StoreEngine;
-import com.pinganfu.hippo.store.exception.HippoStoreException;
+import com.hippo.common.domain.BucketInfo;
+import com.hippo.mdb.MdbStoreEngine;
+import com.hippo.store.StoreEngine;
+import com.hippo.store.exception.HippoStoreException;
 
 public class MdbTest {
 

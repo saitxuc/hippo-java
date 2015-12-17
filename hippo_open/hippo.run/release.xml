@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <assembly>
 	<id>broker</id>
-	<baseDirectory>pinganfu-hippo</baseDirectory>
+	<baseDirectory>hippo</baseDirectory>
 	<formats>
 		<format>dir</format>
 		<format>tar.gz</format>
@@ -22,7 +22,7 @@
 	<moduleSets>
 		<moduleSet>
 			<includes>
-				<include>com.pinganfu.hippo:hippo.run</include>
+				<include>com.hippo:hippo.run</include>
 			</includes>
 			<binaries>
 				<outputDirectory>hippo.run/lib/</outputDirectory>

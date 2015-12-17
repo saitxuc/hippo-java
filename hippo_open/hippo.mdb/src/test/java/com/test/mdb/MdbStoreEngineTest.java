@@ -4,10 +4,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.pinganfu.hippo.common.domain.BucketInfo;
-import com.pinganfu.hippo.mdb.MdbStoreEngine;
-import com.pinganfu.hippo.store.StoreEngine;
-import com.pinganfu.hippo.store.model.GetResult;
+import com.hippo.common.domain.BucketInfo;
+import com.hippo.mdb.MdbStoreEngine;
+import com.hippo.store.StoreEngine;
+import com.hippo.store.model.GetResult;
 
 /**
  * 

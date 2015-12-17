@@ -17,10 +17,10 @@
 	default-autowire="byName">
 	<context:property-placeholder location="file:/wls/wls81/envconfig/hippoconsoleweb/env.properties" />
 	<context:annotation-config />
-    <bean id="serverArithmetic" class="com.pinganfu.hippoconsoleweb.rule.common.ServerArithmetic"></bean>
-    <bean id="loadPropertiesData" class="com.pinganfu.hippoconsoleweb.common.LoadPropertiesData"></bean>
-    <bean id="chooseServerRuleInterface" class="com.pinganfu.hippoconsoleweb.rule.impl.ChooseServerRuleImpl"></bean>
-    <bean id="zkManageInterface" class="com.pinganfu.hippoconsoleweb.service.impl.ZkManageInterfaceImpl"></bean>
+    <bean id="serverArithmetic" class="com.hippoconsoleweb.rule.common.ServerArithmetic"></bean>
+    <bean id="loadPropertiesData" class="com.hippoconsoleweb.common.LoadPropertiesData"></bean>
+    <bean id="chooseServerRuleInterface" class="com.hippoconsoleweb.rule.impl.ChooseServerRuleImpl"></bean>
+    <bean id="zkManageInterface" class="com.hippoconsoleweb.service.impl.ZkManageInterfaceImpl"></bean>
     
 	
 </beans>

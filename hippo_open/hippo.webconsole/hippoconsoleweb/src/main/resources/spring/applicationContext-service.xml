@@ -15,11 +15,11 @@
 	<context:property-placeholder location="file:/wls/wls81/envconfig/hippoconsoleweb/env.properties" />
 	<context:annotation-config />
 	<!-- add by gushijie 2015-03-10 -->
-	<bean id="serverInfoInterface" class="com.pinganfu.hippoconsoleweb.service.impl.ServerInfoInterfaceImpl" />
-	<bean id="clusterInfoInterface" class="com.pinganfu.hippoconsoleweb.service.impl.ClusterInfoInterfaceImpl" />
-	<bean id="getJmxInfoInterface" class="com.pinganfu.hippoconsoleweb.service.impl.GetJmxInfoInterfaceImpl" />
-	<bean id="zkBackupInfoInterface" class="com.pinganfu.hippoconsoleweb.service.impl.ZkBackupInfoInterfaceImpl" />
-	<bean id="backupService" class="com.pinganfu.hippoconsoleweb.service.BackupService" />
+	<bean id="serverInfoInterface" class="com.hippoconsoleweb.service.impl.ServerInfoInterfaceImpl" />
+	<bean id="clusterInfoInterface" class="com.hippoconsoleweb.service.impl.ClusterInfoInterfaceImpl" />
+	<bean id="getJmxInfoInterface" class="com.hippoconsoleweb.service.impl.GetJmxInfoInterfaceImpl" />
+	<bean id="zkBackupInfoInterface" class="com.hippoconsoleweb.service.impl.ZkBackupInfoInterfaceImpl" />
+	<bean id="backupService" class="com.hippoconsoleweb.service.BackupService" />
 	<bean id="propertyConfigurer"  class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
@@ -28,10 +28,10 @@
         </property>
     </bean>
 	
-	<bean id="consoleManagerService" class="com.pinganfu.hippoconsoleweb.service.ConsoleManagerService"
+	<bean id="consoleManagerService" class="com.hippoconsoleweb.service.ConsoleManagerService"
 		init-method="initConsole" destroy-method="close">
 		<property name="zkAddress" value="${dubbo.registry.address}" />
 	</bean>
-	<bean id="clientPool" class="com.pinganfu.hippoconsoleweb.cmd.ClientPool" destroy-method="stopAllClient"></bean>
-	<bean id="hippoClientCallInterface" class="com.pinganfu.hippoconsoleweb.cmd.client.impl.HippoClientCallInterfaceImpl" init-method="startSheduledJob"></bean>
+	<bean id="clientPool" class="com.hippoconsoleweb.cmd.ClientPool" destroy-method="stopAllClient"></bean>
+	<bean id="hippoClientCallInterface" class="com.hippoconsoleweb.cmd.client.impl.HippoClientCallInterfaceImpl" init-method="startSheduledJob"></bean>
 </beans>

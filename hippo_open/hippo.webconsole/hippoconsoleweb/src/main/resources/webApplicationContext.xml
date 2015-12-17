@@ -20,7 +20,7 @@
 	
 	<context:annotation-config />
 
-	<context:component-scan base-package="com.pinganfu.hippoconsoleweb.controller" />
+	<context:component-scan base-package="com.hippoconsoleweb.controller" />
 
 	<bean
 		class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
@@ -46,7 +46,7 @@
 		</property>
 		<!-- 日期格式转换 -->
 		<!-- <property name="webBindingInitializer">
-			<bean class="com.pinganfu.web.converter.DateConverter" />
+			<bean class="com.web.converter.DateConverter" />
 		</property> -->
 	</bean>
 
