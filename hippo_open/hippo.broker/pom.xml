@@ -59,6 +59,12 @@
         
         <dependency>
 			<groupId>com.hippo</groupId>
+			<artifactId>hippo.redis</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+        
+        <dependency>
+			<groupId>com.hippo</groupId>
 			<artifactId>hippo.store</artifactId>
     		<version>${project.version}</version>
 		</dependency>

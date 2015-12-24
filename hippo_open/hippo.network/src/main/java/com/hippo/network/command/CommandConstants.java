@@ -28,6 +28,7 @@ public class CommandConstants {
 
     public static final String SET_COMMAND_ACTION = "set";
     public static final String GET_COMMAND_ACTION = "get";
+    public static final String EXISTS_COMMAND_ACTION = "exists";
     public static final String ATOMICNT_COMMAND_ACTION = "atomicnt";
     public static final String HEAD_KEY = "key";
 
@@ -38,6 +39,7 @@ public class CommandConstants {
     public static final String UPDATE_COMMAND_ACTION = "update";
     public static final String ADD_COMMAND_ACTION = "add";
     public static final String REMOVE_COMMAND_ACTION = "remove";
+    public static final String REMOVELIST_COMMAND_ACTION = "removelist";
     public static final String BITGET_COMMAND_ACTION = "bitget";
     public static final String BITSET_COMMAND_ACTION = "bitset";
     public static final String BIT_OFFSET = "bitoffset";

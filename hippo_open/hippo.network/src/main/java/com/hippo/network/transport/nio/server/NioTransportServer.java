@@ -49,9 +49,9 @@ public class NioTransportServer extends LifeCycleSupport implements TransportSer
 	protected int port = 61300;
 	protected CommandManager commandManager;
 	
-	private ServerFortress serverFortress;
+	protected ServerFortress serverFortress;
 	
-	private CoderInitializer coderInitializer = null;
+	protected CoderInitializer coderInitializer = null;
 	
 	public NioTransportServer(int port, CommandManager commandManager) {
 		this.port = port;
@@ -82,7 +82,7 @@ public class NioTransportServer extends LifeCycleSupport implements TransportSer
 						ChannelOption.RCVBUF_ALLOCATOR,
 						new AdaptiveRecvByteBufAllocator(1024, 1024 * 1024,
 								10 * 1024 * 1024))
-				.childHandler(new NioServerInitializer(nethandler, coderInitializer));
+				.childHandler(new NioServerInitializer(nethandler, coderInitializer, true));
 				
 
 	}
@@ -150,7 +150,7 @@ public class NioTransportServer extends LifeCycleSupport implements TransportSer
 			this.getServerFortress().getTransportConnectionManager().removeSessionInfo(removeSessionCommand.getSessionId());
 			return;
 		}else {
-			CommandResult cresult = this.commandManager.handleCommand(request);
+			CommandResult cresult = this.commandManager.handleCommand(request, request.getAction());
 			if(cresult != null) {
 				response = assembleResponse(cresult);
 			}

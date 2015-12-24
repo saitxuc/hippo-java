@@ -8,7 +8,7 @@ import com.hippo.network.command.EchoCommand;
  * @author saitxuc
  * write 2014-7-22
  */
-public class EchoCommandManager extends BaseCommandManager {
+public class EchoCommandManager extends BaseCommandManager<String> {
 	
 	public EchoCommandManager() {
 		super();

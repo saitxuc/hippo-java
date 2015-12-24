@@ -23,7 +23,7 @@ import com.hippo.store.MigrationEngine;
 /**
  * @author yangxin
  */
-public class BackupServer extends IMasterReplicatedServer implements CommandManager {
+public class BackupServer extends IMasterReplicatedServer implements CommandManager<String> {
 	protected static final Logger log = LoggerFactory.getLogger(BackupServer.class);
 	public final static int MASTER_PORT = 61100;
 	private int master_port;
@@ -79,7 +79,7 @@ public class BackupServer extends IMasterReplicatedServer implements CommandMana
 	 * 包括：注册、取消注册、拉去数据
 	 */
 	@Override
-	public CommandResult handleCommand(Command command) {
+	public CommandResult handleCommand(Command command, String commandkey) {
 		CommandResult result = new CommandResult();
 
 		ReplicationRequest request = (ReplicationRequest) command;

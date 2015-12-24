@@ -504,4 +504,19 @@ public class LevelDbStoreEngine extends LifeCycleSupport implements StoreEngine 
         }
     }
 
+	@Override
+	public boolean exists(byte[] key) throws HippoStoreException {
+		return exists(key, KEY_BUCKET);
+	}
+
+	@Override
+	public boolean exists(byte[] key, int bucketNo) throws HippoStoreException {
+		try{
+			GetResult getResult = get(key, KEY_BUCKET, KEY_BIZ_APP, KEY_VERSION);
+			return true;
+		}catch(HippoStoreException e) {
+			return false;
+		}
+	}
+
 }

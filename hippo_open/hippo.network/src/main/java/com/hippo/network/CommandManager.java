@@ -8,8 +8,8 @@ import java.io.Serializable;
  * @author saitxuc
  * write 2014-7-4
  */
-public interface CommandManager {
+public interface CommandManager<T> {
 	
-	public CommandResult handleCommand(Command connmand);
+	public CommandResult handleCommand(Command connmand, T commandKey);
 	
 }

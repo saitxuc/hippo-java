@@ -35,8 +35,10 @@ import com.hippo.broker.useage.SystemUsage;
 import com.hippo.client.ClientConstants;
 import com.hippo.client.HippoResult;
 import com.hippo.client.command.AtomicntCommand;
+import com.hippo.client.command.ExistsCommand;
 import com.hippo.client.command.GetBitCommand;
 import com.hippo.client.command.GetCommand;
+import com.hippo.client.command.RemoveListCommand;
 import com.hippo.client.command.RemoveCommand;
 import com.hippo.client.command.SetBitCommand;
 import com.hippo.client.command.SetCommand;
@@ -60,10 +62,12 @@ import com.hippo.jmx.ManagedTransportConnector;
 import com.hippo.manager.ManagementContext;
 import com.hippo.mdb.MdbStoreEngine;
 import com.hippo.network.CommandManager;
+import com.hippo.network.CommandResult;
 import com.hippo.network.ServerFortress;
 import com.hippo.network.command.Command;
 import com.hippo.network.command.CommandConstants;
 import com.hippo.network.transport.TransportConnectionManager;
+import com.hippo.network.transport.nio.CommandHandle;
 import com.hippo.store.exception.HippoStoreException;
 
 /**
@@ -71,7 +75,7 @@ import com.hippo.store.exception.HippoStoreException;
  * @author saitxuc
  *
  */
-public class BrokerService extends LifeCycleSupport implements Broker {
+public class BrokerService extends LifeCycleSupport implements Broker, CommandHandle {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
     private static final String DEFAULT_BROKER_NAME = "hippo-broker";
@@ -276,7 +280,10 @@ public class BrokerService extends LifeCycleSupport implements Broker {
 
     @Override
     public TransportConnector addConnector(String shema, int bindPort) throws Exception {
-        TransportConnector connector = TransportConnectorFactory.create(nioType, shema, bindPort, commandManager, serializer);
+        
+    	
+    	
+    	TransportConnector connector = TransportConnectorFactory.create(nioType, shema, bindPort, commandManager, serializer);
         connector.setBrokerService(this);
         transportConnectors.add(connector);
         return connector;
@@ -351,6 +358,13 @@ public class BrokerService extends LifeCycleSupport implements Broker {
         return result;
     }
 
+    public HippoResult processExists(ExistsCommand existscommand) {
+    	String bucketNo = existscommand.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
+        byte[] keybytes = existscommand.getData();
+        HippoResult result = cache.exists(keybytes, Integer.parseInt(bucketNo));
+        return result;
+    }
+    
     public HippoResult processRemove(RemoveCommand removeCommand) {
         String bucketNo = removeCommand.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
         byte[] keybytes = removeCommand.getData();
@@ -358,6 +372,20 @@ public class BrokerService extends LifeCycleSupport implements Broker {
         return result;
     }
 
+    public HippoResult processRemoveArray(RemoveListCommand removeListCommand) {
+    	List<RemoveCommand> removes = removeListCommand.getRemoves();
+    	HippoResult allResult = new HippoResult(true);
+    	long count = 0;
+    	for(RemoveCommand remove : removes) {
+    		HippoResult hippoResult = processRemove(remove);
+    		if(hippoResult.isSuccess()) {
+    			count++;
+    		}
+    	}
+    	allResult.getAttrMap().put(ClientConstants.REMOVE_KEY_COUNT, String.valueOf(count));
+    	return allResult;
+    }
+    
     private Object getCounterMutex(byte[] data) {
         int hash = HashUtil.murmurhash2(data, MUTEX_ARRAY_SIZE);
         int index = Math.abs(hash) % MUTEX_ARRAY_SIZE;
@@ -406,7 +434,7 @@ public class BrokerService extends LifeCycleSupport implements Broker {
                 } else {
                     result = cache.update(atomicntCommand.getExpire(), keybytes, content, 0, Integer.parseInt(bucketNo));
                 }
-
+                result.getAttrMap().put(ClientConstants.ATOMIC_OPER_RESULT, String.valueOf(newv));
                 result.setData(content);
             } catch (Exception e) {
                 LOG.error("error in processAtomicnt!", e);
@@ -416,6 +444,11 @@ public class BrokerService extends LifeCycleSupport implements Broker {
         }
     }
 
+	@Override
+	public CommandResult doCommand(Command command) throws Exception {
+		return this.processCommand(command);
+	}
+    
     @Override
     public HippoResult processCommand(Command command) {
         if (isSimpleMode) {
@@ -431,8 +464,14 @@ public class BrokerService extends LifeCycleSupport implements Broker {
         if (CommandConstants.GET_COMMAND_ACTION.equals(action)) {
             return processGet((GetCommand) command);
         }
+        if (CommandConstants.EXISTS_COMMAND_ACTION.equals(action)) {
+            return processExists((ExistsCommand) command);
+        }
         if (CommandConstants.REMOVE_COMMAND_ACTION.equals(action)) {
             return processRemove((RemoveCommand) command);
+        }
+        if (CommandConstants.REMOVELIST_COMMAND_ACTION.equals(action)) {
+            return processRemoveArray((RemoveListCommand) command);
         }
         if (CommandConstants.ATOMICNT_COMMAND_ACTION.equals(action)) {
             return processAtomicnt((AtomicntCommand) command);
@@ -932,5 +971,7 @@ public class BrokerService extends LifeCycleSupport implements Broker {
     public void setBrokerUris(String brokerUris) {
         this.brokerUris = brokerUris;
     }
+
+
 
 }

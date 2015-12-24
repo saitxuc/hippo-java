@@ -6,7 +6,7 @@ import com.hippo.broker.cluster.controltable.client.mdb.handle.CtrlTableSlaveRep
 import com.hippo.broker.cluster.controltable.client.mdb.handle.CtrlTableSlaveReplicatedBucketResponseHandle;
 import com.hippo.network.BaseCommandManager;
 
-public class CtrlTableSlaveReplicatedCommandManager extends BaseCommandManager {
+public class CtrlTableSlaveReplicatedCommandManager extends BaseCommandManager<String> {
 
     private MdbCtrlTableReplicatedClient client;
 

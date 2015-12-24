@@ -20,6 +20,8 @@ public abstract class MdbBaseOper implements MdbOper {
 
     public static final String GET_OPER = "get";
     
+    public static final String EXIISTS_OPER = "exists";
+    
     public static final String BITSET_OPER = "bitset";
 
     public static final String BITGET_OPER = "bitget";

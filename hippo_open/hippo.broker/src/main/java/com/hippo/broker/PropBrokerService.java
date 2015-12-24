@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.hippo.common.config.PropConfigConstants;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.hippo.broker.cluster.controltable.CtrlTableClusterBrokerService;
 import com.hippo.broker.cluster.simple.MsClusterBrokerService;
 import com.hippo.broker.transport.HippoBrokerCommandManager;
@@ -20,11 +22,13 @@ import com.hippo.broker.useage.SystemUsage;
 import com.hippo.client.HippoResult;
 import com.hippo.common.domain.BucketInfo;
 import com.hippo.common.serializer.SerializerFactory;
+import com.hippo.common.util.ClassUtil;
 import com.hippo.common.util.LimitUtils;
 import com.hippo.common.util.NetUtils;
 import com.hippo.common.util.URISupport;
 import com.hippo.network.CommandManager;
 import com.hippo.network.command.Command;
+import com.hippo.network.transport.nio.CommandHandle;
 import com.hippo.store.StoreEngine;
 import com.hippo.store.StoreEngineFactory;
 
@@ -110,8 +114,19 @@ public class PropBrokerService extends BrokerService {
             this.internalBroker.serializer = SerializerFactory.findSerializer(serializerType);
         }
         
-        
-        CommandManager commandManager = new HippoBrokerCommandManager(internalBroker);
+        String commandManagerClass = this.configMap.get(PropConfigConstants.BROKER_COMMANDMANAGER_CLASS);
+        CommandManager commandManager = null;
+        if(StringUtils.isNotBlank(commandManagerClass)) {
+        	Class<?> commandManagerClazz = ClassUtil.classByClassName(commandManagerClass);
+        	Class<?>[] types = new Class<?>[1];
+        	types[0] = CommandHandle.class;
+        	Object[] args = new Object[1];
+        	args[0] = internalBroker;
+        	commandManager = (CommandManager)ClassUtil.intanceByClass(commandManagerClazz, types, args);
+        }
+        if(commandManager == null) {
+        	commandManager = new HippoBrokerCommandManager(internalBroker);
+        }
         this.internalBroker.setCommandManager(commandManager);
         
         this.brokerUris = this.configMap.get(PropConfigConstants.BROKER_URIS);
@@ -280,5 +295,6 @@ public class PropBrokerService extends BrokerService {
             throw (IllegalArgumentException) new IllegalArgumentException("Invalid broker URI: " + brokerURL).initCause(e);
         }
     }
-
+     
+    
 }

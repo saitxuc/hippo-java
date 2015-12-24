@@ -26,7 +26,7 @@ import io.netty.channel.ChannelHandler.Sharable;
 public class NioServerDefaultHandler extends ChannelDuplexHandler {
 	final static Logger LOG = LoggerFactory.getLogger(ChannelInboundHandlerAdapter.class);
 	
-	private TransportServer server;
+	protected TransportServer server;
 	
 	public NioServerDefaultHandler() {
 		super();

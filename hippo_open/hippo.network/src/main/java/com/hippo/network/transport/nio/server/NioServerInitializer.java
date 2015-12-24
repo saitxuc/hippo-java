@@ -16,18 +16,23 @@ public class NioServerInitializer extends ChannelInitializer<SocketChannel> {
 	
 	private NioServerDefaultHandler handler;
 	
-	private CoderInitializer coderInitializer = null;
+	private CoderInitializer<?> coderInitializer = null;
 	
-	public NioServerInitializer(NioServerDefaultHandler handler, CoderInitializer coderInitializer) {
+	private boolean keepalive = false;
+	
+	public NioServerInitializer(NioServerDefaultHandler handler, CoderInitializer<?> coderInitializer, boolean keepalive) {
 		this.handler = handler;
 		this.coderInitializer = coderInitializer;
+		this.keepalive = keepalive;
 	}
 	
 	@Override
 	protected void initChannel(SocketChannel ch) throws Exception {
 		ch.pipeline().addLast("encoder", coderInitializer.getEncoder());
 		ch.pipeline().addLast("decoder", coderInitializer.getDecoder());
-		ch.pipeline().addLast("keepAlive", new KeepAliveHandler(10, 30, TimeUnit.SECONDS, false));
+		if(keepalive) {
+			ch.pipeline().addLast("keepAlive", new KeepAliveHandler(10, 30, TimeUnit.SECONDS, false));
+		}
 		ch.pipeline().addLast("defaultHandler", handler);
 	}
 

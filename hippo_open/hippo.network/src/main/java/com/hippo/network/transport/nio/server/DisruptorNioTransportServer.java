@@ -138,7 +138,7 @@ public class DisruptorNioTransportServer extends NioTransportServer implements D
 					return;
 				}
 			}else {
-				CommandResult cresult = DisruptorNioTransportServer.this.commandManager.handleCommand(request);
+				CommandResult cresult = DisruptorNioTransportServer.this.commandManager.handleCommand(request, request.getAction());
 				if(cresult != null) {
 					response = assembleResponse(cresult);
 				}

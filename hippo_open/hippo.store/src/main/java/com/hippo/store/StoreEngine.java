@@ -59,6 +59,24 @@ public interface StoreEngine extends LifeCycle {
      */
     public GetResult getData(byte[] key, int bucketNo) throws HippoStoreException;
 
+    
+    /**
+     * 
+     * @param key
+     * @return
+     * @throws HippoStoreException
+     */
+    public boolean exists(byte[] key) throws HippoStoreException;
+    
+    /**
+     * 
+     * @param key
+     * @param bucketNo
+     * @return
+     * @throws HippoStoreException
+     */
+    public boolean exists(byte[] key, int bucketNo) throws HippoStoreException;
+    
     /**
      * @param key
      * @return

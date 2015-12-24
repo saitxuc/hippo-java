@@ -100,7 +100,7 @@ public class ThreadPoolNioTransportServer extends NioTransportServer {
 							return;
 						}
 					}else {
-						CommandResult cresult = ThreadPoolNioTransportServer.this.commandManager.handleCommand(request);
+						CommandResult cresult = ThreadPoolNioTransportServer.this.commandManager.handleCommand(request, request.getAction());
 						if(cresult != null) {
 							response = assembleResponse(cresult);
 						}

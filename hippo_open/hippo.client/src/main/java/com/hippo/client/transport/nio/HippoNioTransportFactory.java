@@ -2,6 +2,7 @@ package com.hippo.client.transport.nio;
 
 import java.io.IOException;
 
+import com.hippo.common.Extension;
 import com.hippo.network.CommandManager;
 import com.hippo.network.transport.Transport;
 import com.hippo.network.transport.TransportServer;
@@ -16,6 +17,7 @@ import com.hippo.network.transport.nio.server.DisruptorNioTransportServer;
  * @author saitxuc
  *
  */
+@Extension("netty-hippo")
 public class HippoNioTransportFactory extends NettyTransportFactory {
 
 	@Override

@@ -15,12 +15,13 @@ import com.hippo.network.transport.nio.CommandHandle;
  * 
  * @author saitxuc
  * write 2014-7-4
+ * @param <T>
  */
-public abstract class BaseCommandManager implements CommandManager {
+public abstract class BaseCommandManager<T> implements CommandManager<T> {
 	
 	protected static final Logger LOG = LoggerFactory.getLogger(BaseCommandManager.class);
 	
-	private Map<String, CommandHandle> commandMap = new HashMap<String, CommandHandle>();
+	private Map<T, CommandHandle> commandMap = new HashMap<T, CommandHandle>();
 	
 	private TransportServer server;
 	
@@ -36,24 +37,24 @@ public abstract class BaseCommandManager implements CommandManager {
 		init();
 	}
 
-	public Map<String, CommandHandle> getCommandMap() {
+	public Map<T, CommandHandle> getCommandMap() {
 		return commandMap;
 	}
 
-	public void setCommandMap(Map<String, CommandHandle> commandMap) {
+	public void setCommandMap(Map<T, CommandHandle> commandMap) {
 		this.commandMap = commandMap;
 	}
 	
-	public void addCommandHandler(String key, CommandHandle commandHandle) {
+	public void addCommandHandler(T key, CommandHandle commandHandle) {
 		this.commandMap.put(key, commandHandle);
 	}
 	
-	public CommandHandle getCommandHandler(String key) {
+	public CommandHandle getCommandHandler(T key) {
 		return this.commandMap.get(key);
 	}
 	
-	public CommandResult handleCommand(Command command) {
-		CommandHandle commandHandle = this.getCommandHandler(command.getAction());
+	public CommandResult handleCommand(Command command, T commandKey) {
+		CommandHandle commandHandle = this.getCommandHandler(commandKey);
 		CommandResult cresult = null;
 		if(commandHandle != null) {
 			try {

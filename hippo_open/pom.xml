@@ -21,6 +21,7 @@
 		<module>hippo.run</module>
         <module>hippo.client</module>
 		<module>hippo.tools</module>
+		<module>hippo.redis</module>
   </modules>
 
 	<!-- <profiles> <profile> <id>all</id> <modules> <module>pingacache.all</module> 

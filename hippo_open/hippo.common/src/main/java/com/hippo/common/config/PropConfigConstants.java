@@ -29,6 +29,8 @@ public class PropConfigConstants {
 	
 	public static final String BROKER_SERIALIZER = "broker.serializer";
 	
+	public static final String BROKER_COMMANDMANAGER_CLASS = "broker.commandmanager.class";
+	
 	public static final String BROKER_URIS = "broker.uris";
 	
 	public static final String BROKER_STORE = "broker.store";

@@ -15,7 +15,7 @@ import com.hippo.network.command.Command;
  * 2015-4-1
  *
  */
-public class DefaultCoderInitializer implements CoderInitializer {
+public class DefaultCoderInitializer implements CoderInitializer<Command> {
 	
 	protected Serializer serializer = null;
 	

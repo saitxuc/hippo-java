@@ -70,7 +70,19 @@ public class MdbStoreEngine extends LifeCycleSupport implements StoreEngine, Run
         MdbResult mdbResult = mdbManager.offerOper(key, null, -1, bucketNo, MdbConstants.DEFAULT_VERSION, MdbBaseOper.GET_OPER);
         return new GetResult(mdbResult.getValue(), mdbResult.getVersion(), mdbResult.getExpireTime());
     }
-
+    
+	@Override
+	public boolean exists(byte[] key) throws HippoStoreException {
+		return this.exists(key, MdbConstants.DEFAULT_BUCKET_NO);
+	}
+    
+	@Override
+	public boolean exists(byte[] key, int bucketNo)
+			throws HippoStoreException {
+		MdbResult mdbResult = mdbManager.offerOper(key, null, -1, bucketNo, MdbConstants.DEFAULT_VERSION, MdbBaseOper.EXIISTS_OPER);
+        return mdbResult.isSuccess();
+	}
+	
     @Override
     public boolean removeData(byte[] key) throws HippoStoreException {
         return this.removeData(key, MdbConstants.DEFAULT_BUCKET_NO);
@@ -345,4 +357,5 @@ public class MdbStoreEngine extends LifeCycleSupport implements StoreEngine, Run
         MdbResult mdbResult = mdbManager.offerOper(key, value, expire, bucketNo, version, MdbBaseOper.UPDATE_OPER);
         return mdbResult.isSuccess();
     }
+
 }

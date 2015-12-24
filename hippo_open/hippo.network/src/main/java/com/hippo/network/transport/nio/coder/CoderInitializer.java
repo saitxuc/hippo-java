@@ -9,12 +9,13 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * 
  * @author saitxuc
  * 2015-3-4
+ * @param <T>
  */
-public interface CoderInitializer {
+public interface CoderInitializer<T> {
 	
 	ByteToMessageDecoder getDecoder();
 	
-	MessageToByteEncoder<? extends Command> getEncoder();
+	MessageToByteEncoder<T> getEncoder();
 	
 	void close();
 }

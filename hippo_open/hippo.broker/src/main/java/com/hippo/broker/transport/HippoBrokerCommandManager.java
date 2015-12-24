@@ -15,7 +15,7 @@ import com.hippo.network.command.CommandConstants;
  * @author saitxuc
  *
  */
-public class HippoBrokerCommandManager extends BaseCommandManager{
+public class HippoBrokerCommandManager extends BaseCommandManager<String>{
 	
 	private Broker brokerService;
 	

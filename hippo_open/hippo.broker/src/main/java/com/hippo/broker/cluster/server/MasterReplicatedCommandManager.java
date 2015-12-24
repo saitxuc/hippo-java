@@ -7,7 +7,7 @@ import com.hippo.broker.cluster.server.handle.MasterReplicatedBucketRequestHandl
 import com.hippo.broker.cluster.simple.master.mdb.MdbMasterReplicatedServer;
 import com.hippo.network.BaseCommandManager;
 
-public class MasterReplicatedCommandManager extends BaseCommandManager {
+public class MasterReplicatedCommandManager extends BaseCommandManager<String> {
     private MdbMasterReplicatedServer server;
 
     public MasterReplicatedCommandManager(MdbMasterReplicatedServer server) {

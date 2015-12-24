@@ -204,6 +204,8 @@ public class MdbManagerImpl extends LifeCycleSupport implements MdbManager {
             mdbResult = handleAdd(key, value, expire, bucketNo, version);
         } else if (operAction.equals(MdbBaseOper.GET_OPER)) {
             mdbResult = handleGet(key, bucketNo);
+        } else if (operAction.equals(MdbBaseOper.EXIISTS_OPER)) {
+            mdbResult = handleExists(key, bucketNo);
         } else if (operAction.equals(MdbBaseOper.UPDATE_OPER)) {
             mdbResult = handleUpdate(key, value, expire, bucketNo, version);
         } else if (operAction.equals(MdbBaseOper.REMOVE_OPER)) {
@@ -490,7 +492,25 @@ public class MdbManagerImpl extends LifeCycleSupport implements MdbManager {
             }
         }
     }
-
+    
+    private MdbResult handleExists(final byte[] key, Integer buck_no) throws HippoStoreException {
+    	 try {
+    		 MdbPointer sInfo = keyManager.getStoreInfo(key, buck_no);
+    		 boolean found = false;
+             if (sInfo != null) {
+            	 found = true;
+             }	
+             return new MdbResult(key, found);
+    	 }catch (Exception e) {
+             if (e instanceof HippoStoreException) {
+                 throw (HippoStoreException) e;
+             } else {
+                 LOG.error(e.getMessage(), e);
+                 throw new HippoStoreException(e.getMessage(), HIPPO_SERVER_ERROR);
+             }
+         }
+    }
+    
     private MdbResult handleUpdate(final byte[] key, final byte[] value, final int expire, final Integer buck_no, final int version) throws HippoStoreException {
         try {
             final MdbPointer sInfoOld = keyManager.getStoreInfo(key, buck_no);

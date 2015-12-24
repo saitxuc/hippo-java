@@ -9,7 +9,7 @@ import com.hippo.network.BaseCommandManager;
  * @author saitxuc
  * 2015-1-15
  */
-public class LdbCtrlTableReplicatedCommandManager extends BaseCommandManager {
+public class LdbCtrlTableReplicatedCommandManager extends BaseCommandManager<String> {
 
     private LdbCtrlTableReplicatedServer server;
 

@@ -168,7 +168,20 @@ public class DefaultCache extends LifeCycleSupport implements Cache {
         }
         return result;
     }
-
+    
+    @Override
+    public HippoResult exists(byte[] key, int bucketNo) {
+    	 HippoResult result = null;
+         try {
+             boolean founded = storeEngine.exists(key, bucketNo);
+             result = new HippoResult(founded);
+         } catch (HippoStoreException e) {
+             LOG.error(" get key to cache happen error. ", e);
+             result = new HippoResult(false, e.getErrorCode(), key);
+         }
+         return result;
+    }
+    
     @Override
     public HippoResult get(byte[] key, int version, int bucketNo) {
         return get(key, bucketNo);

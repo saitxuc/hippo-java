@@ -22,6 +22,10 @@ public class ClientConstants {
 	
 	public static final String HEAD_BUCKET_NO = "head_bucket_no";
 	
+	public static final String REMOVE_KEY_COUNT = "remove_key_count";
+	
+	public static final String ATOMIC_OPER_RESULT = "atomic_oper_result";
+	
 	public static final String HEAD_VERSION = "head_version";
 	
 	//public static final int FAILOVER_CHECK_SCHEDULE_INIT_TIME = 1 * 1000;

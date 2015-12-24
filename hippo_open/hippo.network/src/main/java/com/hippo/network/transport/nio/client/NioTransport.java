@@ -185,7 +185,7 @@ public class NioTransport extends LifeCycleSupport implements Transport {
 	public void onCommand(Object ctx, Command command)
 			throws HippoException {
 		if(commandManager != null) {
-			this.commandManager.handleCommand(command);
+			this.commandManager.handleCommand(command, command.getAction());
 		}else{
 			LOG.warn(" commandManager is not set. no handle to do command. ");
 		}

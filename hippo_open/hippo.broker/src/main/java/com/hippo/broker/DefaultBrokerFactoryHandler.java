@@ -54,6 +54,7 @@ public class DefaultBrokerFactoryHandler implements BrokerFactoryHandler {
         configMap.put(PropConfigConstants.BROKER_NAME, props.getProperty(PropConfigConstants.BROKER_NAME));
         configMap.put(PropConfigConstants.BROKER_USEJMX, props.getProperty(PropConfigConstants.BROKER_USEJMX));
         configMap.put(PropConfigConstants.BROKER_SERIALIZER, props.getProperty(PropConfigConstants.BROKER_SERIALIZER));
+        configMap.put(PropConfigConstants.BROKER_COMMANDMANAGER_CLASS, props.getProperty(PropConfigConstants.BROKER_COMMANDMANAGER_CLASS));
         configMap.put(PropConfigConstants.BROKER_URIS, props.getProperty(PropConfigConstants.BROKER_URIS));
         configMap.put(PropConfigConstants.BROKER_STORE, props.getProperty(PropConfigConstants.BROKER_STORE));
         configMap.put(PropConfigConstants.DB_BUCKETS, props.getProperty(PropConfigConstants.DB_BUCKETS));

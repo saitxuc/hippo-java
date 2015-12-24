@@ -9,7 +9,7 @@ import com.hippo.network.transport.nio.CommandHandle;
  * @author saitxuc
  * write 2014-7-2
  */
-public class EmptyCommandManager extends BaseCommandManager {
+public class EmptyCommandManager extends BaseCommandManager<String> {
 
 	@Override
 	public void initConmandHandler() {

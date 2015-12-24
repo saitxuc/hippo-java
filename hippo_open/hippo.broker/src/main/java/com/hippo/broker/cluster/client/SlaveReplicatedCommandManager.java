@@ -6,7 +6,7 @@ import com.hippo.broker.cluster.client.handle.SlaveReplicatedBucketResponseHandl
 import com.hippo.broker.cluster.simple.client.mdb.MdbSlaveReplicatedClient;
 import com.hippo.network.BaseCommandManager;
 
-public class SlaveReplicatedCommandManager extends BaseCommandManager {
+public class SlaveReplicatedCommandManager extends BaseCommandManager<String> {
 
     private MdbSlaveReplicatedClient client;
 

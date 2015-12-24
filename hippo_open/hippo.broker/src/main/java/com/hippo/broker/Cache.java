@@ -45,6 +45,14 @@ public interface Cache extends LifeCycle {
      * @return
      */
     public HippoResult get(byte[] key, int bucketNo);
+    
+    /**
+     * 
+     * @param key
+     * @param bucketNo
+     * @return
+     */
+    public HippoResult exists(byte[] key, int bucketNo);
 
     /**
      * @param key
