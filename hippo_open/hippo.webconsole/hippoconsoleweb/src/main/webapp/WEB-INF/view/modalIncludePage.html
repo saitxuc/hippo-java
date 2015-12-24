@@ -1,0 +1,111 @@
+<div class='modal hide fade' id='errorAlert' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h2>Warning!</h2>
+    </div>
+  	<div class="modal-body alert-error">
+     	<center><div align="center" class="ng-binding" ng-bind-html="msg | nl2br"></div></center>
+    </div>
+
+    <div class='modal-footer'>
+        <button class='btn btn-success' data-dismiss='modal'>OK</button>
+    </div>
+</div>
+
+<div class='modal hide fade' id='successAlert' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h2>Warning!</h2>
+    </div>
+  	<div class="modal-body alert-success">
+     	<center><div align="center" >{{msg}}</div></center>
+    </div>
+
+    <div class='modal-footer'>
+        <button class='btn btn-success' data-dismiss='modal'>OK</button>
+    </div>
+</div>
+
+<div class='modal hide fade' id='viewAlert' role='dialog' tabindex='-1'>
+	<div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h2>{{title}}</h2>
+    </div>
+  	<div class="modal-body alert">
+     	<center><div align="center" ng-bind-html="someVar | nl2br" class="ng-binding">{{msg}}</div></center>
+    </div>
+
+    <div class='modal-footer'>
+        <button class='btn btn-success' data-dismiss='modal'>OK</button>
+    </div>
+</div>
+
+<div class='modal hide fade' id='confirm' role='dialog' tabindex='-1'>
+    <div class='modal-header'>
+        <button class='close' data-dismiss='modal' type='button'>&times;</button>
+        <h2>Warning!</h2>
+    </div>
+  	<div class="modal-body alert-error">
+     	<center><div align="center" >{{msg}}</div></center>
+    </div>
+
+    <div class='modal-footer'>
+        <button class='btn btn-error' data-dismiss='modal' ng-click="doCancel()">Cancel</button>
+        <button class='btn btn-success' data-dismiss='modal' ng-click="doOK()">OK</button>
+    </div>
+</div>
+
+
+
+<style>
+#loading-frame,#loading-wrap {position: absolute;}
+#loading-frame {left: 0;right: 0;z-index: 10; background: #FFF}
+#loading-frame {background: #000; z-index: 11;}
+#loading-wrap {width: 300px; left: 50%; top:40%; margin-left: -150px;}
+
+</style>
+<!-- load bar -->
+
+
+
+<script type="text/javascript" >
+
+var errorAlert = function($scope,msg){
+	$scope.msg = msg;
+	$('#errorAlert').modal('show').css({
+		width:'500px',
+		'margin-left':function(){
+			return-($(this).width()/2);
+		}
+	});
+};
+
+var successAlert = function($scope,msg){
+	$scope.msg = msg;
+	$('#successAlert').modal('show').css({
+		width:'500px',
+		'margin-left':function(){
+			return-($(this).width()/2);
+		}
+	});
+};
+
+var confirmAlert = function($scope,msg){
+	$scope.msg = msg;
+	$('#confirm').modal('show').css({
+		width:'500px',
+		'margin-left':function(){
+			return-($(this).width()/2);
+		}
+	});
+	return {
+        on: function (callback) {
+          if (callback && callback instanceof Function) {
+            $scope.doOK = function(){callback(true)};
+            $scope.doCancel = function(){callback(false)};
+          }
+        }
+    };
+};
+
+</script>
