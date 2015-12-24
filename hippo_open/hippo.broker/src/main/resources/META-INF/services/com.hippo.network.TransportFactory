@@ -1,3 +1,0 @@
-com.hippo.client.transport.nio.HippoNioTransportFactory
-com.hippo.redis.RedisTransportFactory
-com.hippo.broker.cluster.ReplicatedTransportFactory

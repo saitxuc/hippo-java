@@ -1,3 +1,0 @@
-com.hippo.client.transport.failover.FailoverConnectionControl
-com.hippo.client.transport.cluster.ClusterConnectionControl
-com.hippo.client.transport.simple.SimpleConnectionControl
