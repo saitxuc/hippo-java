@@ -1,0 +1,2 @@
+com.hippo.broker.cluster.controltable.LdbCtrlTableClusterReplicatedFactory
+com.hippo.broker.cluster.controltable.MdbCtrlTableClusterReplicatedFactory
