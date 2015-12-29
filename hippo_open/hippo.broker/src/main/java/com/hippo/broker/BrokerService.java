@@ -1,30 +1,5 @@
 package com.hippo.broker;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import com.hippo.broker.cluster.ReplicatedConstants;
 import com.hippo.broker.plugin.BrokerPlugin;
 import com.hippo.broker.transport.HippoBrokerCommandManager;
@@ -34,15 +9,7 @@ import com.hippo.broker.transport.TransportConnectorFactory;
 import com.hippo.broker.useage.SystemUsage;
 import com.hippo.client.ClientConstants;
 import com.hippo.client.HippoResult;
-import com.hippo.client.command.AtomicntCommand;
-import com.hippo.client.command.ExistsCommand;
-import com.hippo.client.command.GetBitCommand;
-import com.hippo.client.command.GetCommand;
-import com.hippo.client.command.RemoveListCommand;
-import com.hippo.client.command.RemoveCommand;
-import com.hippo.client.command.SetBitCommand;
-import com.hippo.client.command.SetCommand;
-import com.hippo.client.command.UpdateCommand;
+import com.hippo.client.command.*;
 import com.hippo.common.domain.BucketInfo;
 import com.hippo.common.errorcode.HippoCodeDefine;
 import com.hippo.common.lifecycle.LifeCycle;
@@ -51,14 +18,9 @@ import com.hippo.common.serializer.KryoSerializer;
 import com.hippo.common.serializer.Serializer;
 import com.hippo.common.util.HashUtil;
 import com.hippo.common.util.IOExceptionSupport;
-import com.hippo.jmx.AnnotatedMBean;
-import com.hippo.jmx.BrokerMBeanSupport;
-import com.hippo.jmx.BrokerView;
-import com.hippo.jmx.ConnectorView;
-import com.hippo.jmx.ConnectorViewMBean;
-import com.hippo.jmx.ManagedConnection;
-import com.hippo.jmx.ManagedTransportConnection;
-import com.hippo.jmx.ManagedTransportConnector;
+import com.hippo.common.util.KeyUtil;
+import com.hippo.common.util.Logarithm;
+import com.hippo.jmx.*;
 import com.hippo.manager.ManagementContext;
 import com.hippo.mdb.MdbStoreEngine;
 import com.hippo.network.CommandManager;
@@ -69,11 +31,21 @@ import com.hippo.network.command.CommandConstants;
 import com.hippo.network.transport.TransportConnectionManager;
 import com.hippo.network.transport.nio.CommandHandle;
 import com.hippo.store.exception.HippoStoreException;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
- * 
  * @author saitxuc
- *
  */
 public class BrokerService extends LifeCycleSupport implements Broker, CommandHandle {
 
@@ -100,6 +72,7 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
     protected boolean useJmx = false;
     protected String jmxConnectorHost = null;
     protected Cache cache;
+    protected int defaultBitBlockedSize = 32 * 1024;
     private List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
 
     public void setTransportConnectors(List<TransportConnector> transportConnectors) {
@@ -210,7 +183,7 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             if (mbeanServer != null) {
-                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext();) {
+                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext(); ) {
                     ObjectName name = (ObjectName) iter.next();
                     try {
                         mbeanServer.unregisterMBean(name);
@@ -280,10 +253,9 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
 
     @Override
     public TransportConnector addConnector(String shema, int bindPort) throws Exception {
-        
-    	
-    	
-    	TransportConnector connector = TransportConnectorFactory.create(nioType, shema, bindPort, commandManager, serializer);
+
+
+        TransportConnector connector = TransportConnectorFactory.create(nioType, shema, bindPort, commandManager, serializer);
         connector.setBrokerService(this);
         transportConnectors.add(connector);
         return connector;
@@ -328,15 +300,15 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
 
     protected void checkSystemUsageLimits() throws IOException {
         /***
-        SystemUsage usage = getSystemUsage();
-        long memLimit = usage.getMemoryUsage().getLimit();
-        long jvmLimit = Runtime.getRuntime().maxMemory();
-        if (memLimit > jvmLimit) {
-            LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
-                      " mb) is more than the maximum available for the JVM: " +
-                      jvmLimit / (1024 * 1024) + " mb");
-        }
-        ***/
+         SystemUsage usage = getSystemUsage();
+         long memLimit = usage.getMemoryUsage().getLimit();
+         long jvmLimit = Runtime.getRuntime().maxMemory();
+         if (memLimit > jvmLimit) {
+         LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
+         " mb) is more than the maximum available for the JVM: " +
+         jvmLimit / (1024 * 1024) + " mb");
+         }
+         ***/
         if (this.getCache() != null) {
             Cache cache = getCache();
             cache.checkStoreEngineConfig();
@@ -359,12 +331,12 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
     }
 
     public HippoResult processExists(ExistsCommand existscommand) {
-    	String bucketNo = existscommand.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
+        String bucketNo = existscommand.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
         byte[] keybytes = existscommand.getData();
         HippoResult result = cache.exists(keybytes, Integer.parseInt(bucketNo));
         return result;
     }
-    
+
     public HippoResult processRemove(RemoveCommand removeCommand) {
         String bucketNo = removeCommand.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
         byte[] keybytes = removeCommand.getData();
@@ -373,19 +345,19 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
     }
 
     public HippoResult processRemoveArray(RemoveListCommand removeListCommand) {
-    	List<RemoveCommand> removes = removeListCommand.getRemoves();
-    	HippoResult allResult = new HippoResult(true);
-    	long count = 0;
-    	for(RemoveCommand remove : removes) {
-    		HippoResult hippoResult = processRemove(remove);
-    		if(hippoResult.isSuccess()) {
-    			count++;
-    		}
-    	}
-    	allResult.getAttrMap().put(ClientConstants.REMOVE_KEY_COUNT, String.valueOf(count));
-    	return allResult;
+        List<RemoveCommand> removes = removeListCommand.getRemoves();
+        HippoResult allResult = new HippoResult(true);
+        long count = 0;
+        for (RemoveCommand remove : removes) {
+            HippoResult hippoResult = processRemove(remove);
+            if (hippoResult.isSuccess()) {
+                count++;
+            }
+        }
+        allResult.getAttrMap().put(ClientConstants.REMOVE_KEY_COUNT, String.valueOf(count));
+        return allResult;
     }
-    
+
     private Object getCounterMutex(byte[] data) {
         int hash = HashUtil.murmurhash2(data, MUTEX_ARRAY_SIZE);
         int index = Math.abs(hash) % MUTEX_ARRAY_SIZE;
@@ -406,7 +378,7 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
                     //get the expire time
                     String expireTimeStr = result.getSttribute("expireTime");
                     if (StringUtils.isNotEmpty(expireTimeStr) && Long.parseLong(expireTimeStr) > 0 && System.currentTimeMillis() > Long
-                        .parseLong(expireTimeStr)) {
+                            .parseLong(expireTimeStr)) {
                         newv = atomicntCommand.getInitv() + delta;
                         isNew = true;
                     } else {
@@ -444,11 +416,11 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
         }
     }
 
-	@Override
-	public CommandResult doCommand(Command command) throws Exception {
-		return this.processCommand(command);
-	}
-    
+    @Override
+    public CommandResult doCommand(Command command) throws Exception {
+        return this.processCommand(command);
+    }
+
     @Override
     public HippoResult processCommand(Command command) {
         if (isSimpleMode) {
@@ -482,7 +454,32 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
         if (CommandConstants.BITGET_COMMAND_ACTION.equals(action)) {
             return processGetBit((GetBitCommand) command);
         }
+        if (CommandConstants.BITREMOVE_COMMAND_ACTION.equals(action)) {
+            return processBitRemove((RemoveBitCommand) command);
+        }
         return null;
+    }
+
+    private HippoResult processBitRemove(RemoveBitCommand command) {
+        byte[] keybytes = command.getData();
+
+        String offsetStr = command.getHeadValue(CommandConstants.BIT_OFFSET);
+        String bucketNo = command.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
+
+        int maxOffset = Integer.parseInt(offsetStr);
+        final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, defaultBitBlockedSize);
+        int bitSizeLeft = byteSizeLeft * 8;
+        int allBlockOffset = (maxOffset % bitSizeLeft == 0 ? maxOffset / bitSizeLeft : (maxOffset / bitSizeLeft + 1));
+
+        for (int count = 0; count < allBlockOffset; count++) {
+            final int currentOffsetEnd = (count + 1) * byteSizeLeft;
+            final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
+            HippoResult result = cache.remove(newKey, Integer.parseInt(bucketNo));
+            if (!result.isSuccess()) {
+                return new HippoResult(false, result.getErrorCode(), result.getMessage());
+            }
+        }
+        return new HippoResult(true);
     }
 
     private HippoResult processGetBit(GetBitCommand command) {
@@ -490,19 +487,69 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
         HippoResult result = null;
         String offsetStr = command.getHeadValue(CommandConstants.BIT_OFFSET);
         String bucketNo = command.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
+        int offset = Integer.parseInt(offsetStr);
 
         if (Boolean.parseBoolean(command.getHeadValue(CommandConstants.BIT_WHOLEGET))) {
-            result = cache.get(keybytes, Integer.parseInt(bucketNo));
-        } else {
-            int offset = Integer.parseInt(offsetStr);
-            result = cache.getBit(keybytes, offset, Integer.parseInt(bucketNo));
-        }
+            final int maxByte = (offset % 8 == 0 ? offset / 8 : offset / 8 + 1);
+            final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, defaultBitBlockedSize);
+            int bitSizeLeft = byteSizeLeft * 8;
+            int allBlockOffset = (offset % bitSizeLeft == 0 ? offset / bitSizeLeft : (offset / bitSizeLeft + 1));
+            byte[] resultByte = new byte[maxByte];
+            int resultExistCount = 0;
+            for (int count = 0; count < allBlockOffset; count++) {
+                final int currentOffsetBegin = (count) * byteSizeLeft;
+                final int currentOffsetEnd = (count + 1) * byteSizeLeft;
+                final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
+                HippoResult res = cache.get(newKey, Integer.parseInt(bucketNo));
 
-        if (!result.isSuccess() && (HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(result.getErrorCode()) || HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(result
-            .getErrorCode()))) {
-            result.setSuccess(true);
-            result.putAttribute(CommandConstants.BIT_NOT_EXIST, "true");
-            result.putAttribute(CommandConstants.BIT_GET_EXT_CODE, result.getErrorCode());
+                //other error
+                if (!res.isSuccess() && !HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(res.getErrorCode()) && !HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(res
+                        .getErrorCode())) {
+                    return new HippoResult(false, res.getErrorCode(), res.getMessage());
+                }
+
+                if (res.isSuccess()) {
+                    String expireTimeStr = res.getSttribute("expireTime");
+                    long expireTime = 0;
+                    if (!StringUtils.isEmpty(expireTimeStr)) {
+                        expireTime = Long.parseLong(expireTimeStr);
+                    }
+                    if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
+                        //expire
+                        LOG.warn(String.format(keybytes + " from [%d ~ %d) has been expired and will be thrown!!", currentOffsetBegin, currentOffsetEnd));
+                    } else {
+                        resultExistCount++;
+                        LOG.info(String.format(keybytes + " from [%d ~ %d) got, waiting for transport!", currentOffsetBegin, currentOffsetEnd));
+                        if (maxByte >= (currentOffsetBegin + res.getData().length)) {
+                            System.arraycopy(res.getData(), 0, resultByte, currentOffsetBegin, res.getData().length);
+                        } else {
+                            System.arraycopy(res.getData(), 0, resultByte, currentOffsetBegin, maxByte - currentOffsetBegin);
+                        }
+                    }
+                } else {
+                    if (HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(res.getErrorCode()) || HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(res
+                            .getErrorCode())) {
+                        LOG.warn(String.format(keybytes + " from [%d ~ %d) not existed!!", currentOffsetBegin, currentOffsetEnd));
+                    }
+                }
+            }
+
+            result = new HippoResult(true);
+            if (resultExistCount == 0) {
+                result.putAttribute(CommandConstants.BIT_NOT_EXIST, "true");
+            } else {
+                result.setData(resultByte);
+            }
+        } else {
+            byte[] newKey = KeyUtil.getByteAccordingOffset(keybytes, offset, CommandConstants.DEFAULT_BIT_OP_SEPRATOR, defaultBitBlockedSize);
+            result = cache.getBit(newKey, offset, Integer.parseInt(bucketNo));
+
+            if (!result.isSuccess() && (HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(result.getErrorCode()) || HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(result
+                    .getErrorCode()))) {
+                result.setSuccess(true);
+                result.putAttribute(CommandConstants.BIT_NOT_EXIST, "true");
+                result.putAttribute(CommandConstants.BIT_GET_EXT_CODE, result.getErrorCode());
+            }
         }
         return result;
     }
@@ -521,7 +568,9 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
 
         boolean val = Boolean.parseBoolean(command.getHeadValue(CommandConstants.BIT_VAL));
 
-        return cache.setBit(expire, key, offset, val, Integer.parseInt(bucketNo));
+        byte[] newKey = KeyUtil.getByteAccordingOffset(key, offset, CommandConstants.DEFAULT_BIT_OP_SEPRATOR, defaultBitBlockedSize);
+
+        return cache.setBit(expire, newKey, offset, val, Integer.parseInt(bucketNo));
     }
 
     public void doStartBroker() {
@@ -929,11 +978,11 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
             for (int i = 0; i < connectorList.size(); i++) {
                 TransportConnector transportConn = (TransportConnector) connectorList.get(i);
                 HippoTransportConnectionManager hippoConnectionManager = (HippoTransportConnectionManager) transportConn.getServer()
-                    .getTransportConnectionManager();
+                        .getTransportConnectionManager();
                 ManagedTransportConnector managedTran = (ManagedTransportConnector) hippoConnectionManager.getConnector();
                 String objNameKey = managedTran.getConnectorName().toString();
                 HippoTransportConnectionManager hippoClientConnectionManager = (HippoTransportConnectionManager) managedTran.getServer()
-                    .getTransportConnectionManager();
+                        .getTransportConnectionManager();
                 List<ManagedConnection> conList = hippoClientConnectionManager.getManagedConnections();
                 if (conList != null && conList.size() > 0) {
                     for (ManagedConnection mconn : conList) {
@@ -971,7 +1020,6 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
     public void setBrokerUris(String brokerUris) {
         this.brokerUris = brokerUris;
     }
-
 
 
 }

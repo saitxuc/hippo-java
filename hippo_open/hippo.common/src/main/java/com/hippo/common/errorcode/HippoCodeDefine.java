@@ -87,7 +87,7 @@ public class HippoCodeDefine {
     /**
      * client error,begin with 4
      */
-    public static final String HIIPO_CLIENT_ERROR = "401";
+    public static final String HIPPO_CLIENT_ERROR = "401";
 
     public static final String HIPPO_CLIENT_SESSION_ERROR = "402";
 

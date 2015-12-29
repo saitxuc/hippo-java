@@ -13,7 +13,7 @@ public class BitGetCommandHandle implements CommandHandle {
 
     private Broker broker;
 
-    public BitGetCommandHandle(Broker broker) {
+    public  BitGetCommandHandle(Broker broker) {
         this.broker = broker;
     }
 

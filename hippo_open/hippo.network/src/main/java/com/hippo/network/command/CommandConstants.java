@@ -49,5 +49,6 @@ public class CommandConstants {
     public static final String BIT_NOT_EXIST = "bitnotexist";
     public static final String BIT_VAL = "bitval";
     public static final String BIT_GET_EXT_CODE = "bitgeterrorcode";
-    public static final String BITSET_SEPRATOR = "|";
+    public static final byte DEFAULT_BIT_OP_SEPRATOR = (byte) -19;
+    public static final String BITREMOVE_COMMAND_ACTION = "bitremove";
 }
