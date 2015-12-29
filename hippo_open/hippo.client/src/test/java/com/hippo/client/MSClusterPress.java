@@ -1,25 +1,27 @@
 package com.hippo.client;
 
+import com.hippo.client.impl.HippoClientImpl;
+
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.hippo.client.impl.HippoClientImpl;
 
 public class MSClusterPress {
     public static void main(String[] args) {
-        String ip = args[0];
-        int byteLength = Integer.parseInt(args[1]);
+        String ip1 = args[0];
+        String ip2 = args[1];
+        int byteLength = Integer.parseInt(args[2]);
 
-        System.out.println("ip -> " + ip);
+        System.out.println("ip -> " + ip1 + " - " + ip2);
         System.out.println("length -> " + byteLength);
 
         final AtomicLong successCount = new AtomicLong(0L);
         final AtomicLong exceptionCount = new AtomicLong(0L);
 
-        int clientCount = 10;
+        int clientCount = 1;
         int threadCount = 10;
 
         ExecutorService service = Executors.newFixedThreadPool(threadCount * clientCount);
@@ -34,7 +36,7 @@ public class MSClusterPress {
 
         for (int j = 0; j < clientCount; j++) {
             HippoConnector hippoConnector = new HippoConnector();
-            hippoConnector.setBrokerUrl("failover:(hippo://" + ip + ":61000)");
+            hippoConnector.setBrokerUrl("failover:(hippo://" + ip1 + ":61000,hippo://" + ip2 + ":61000)");
             hippoConnector.setSessionInstance(threadCount);
 
             final HippoClientImpl client = new HippoClientImpl(hippoConnector);

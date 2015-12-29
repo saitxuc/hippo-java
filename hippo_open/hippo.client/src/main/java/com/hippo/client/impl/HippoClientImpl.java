@@ -11,6 +11,8 @@ import com.hippo.common.lifecycle.LifeCycleSupport;
 import com.hippo.common.serializer.KryoSerializer;
 import com.hippo.common.serializer.Serializer;
 import com.hippo.common.util.ByteUtil;
+import com.hippo.common.util.KeyUtil;
+import com.hippo.common.util.Logarithm;
 import com.hippo.network.Session;
 import com.hippo.network.command.Command;
 import com.hippo.network.command.CommandConstants;
@@ -24,8 +26,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author saitxuc write 2014-8-11
@@ -713,7 +718,14 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
 
     @Override
     public HippoResult getWholeBit(final Serializable key, int maxOffset, final int requestExpire, int timeOut) {
+
         byte[] keybytes = null;
+        try {
+            keybytes = serializer.serialize(key);
+        } catch (IOException e) {
+            log.error("serialize bit error when getWholeBit! ", e);
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
+        }
 
         if (maxOffset < 0) {
             maxOffset = 100000001;
@@ -721,72 +733,174 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             maxOffset++;
         }
 
-        Session session = null;
-        try {
-            keybytes = serializer.serialize(key);
-            GetBitCommand command = new GetBitCommand();
+        final AtomicInteger requestCount = new AtomicInteger(0);
+        final AtomicInteger requestSuccess = new AtomicInteger(0);
+        final AtomicInteger requestError = new AtomicInteger(0);
+        final AtomicInteger requestReceive = new AtomicInteger(0);
+        final int maxByte = (maxOffset % 8 == 0 ? maxOffset / 8 : maxOffset / 8 + 1);
 
-            command.setData(keybytes);
-            command.putHeadValue(CommandConstants.BIT_WHOLEGET, "true");
-            command.putHeadValue(CommandConstants.BIT_OFFSET, maxOffset + "");
+        final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, CommandConstants.DEFAULT_BIT_BLOCKED_SIZE);
+        int bitSizeLeft = byteSizeLeft * 8;
+        int allBlockOffset = (maxOffset % bitSizeLeft == 0 ? maxOffset / bitSizeLeft : (maxOffset / bitSizeLeft + 1));
 
-            ClientSessionResult sessionResult = createSession(keybytes);
-            session = sessionResult.getSession();
-            setBucketNumInCommand(command, sessionResult.getBucketNum());
+        final byte[] resultByte = new byte[maxByte];
 
-            HippoResult result = null;
-            Response rsp = (Response) session.send(command, requestExpire * 1000);
+        final CountDownLatch latch = new CountDownLatch(allBlockOffset);
+        final byte[] originalKey = keybytes;
+        for (int count = 0; count < allBlockOffset; count++) {
+            final int currentOffsetEnd = (count + 1) * byteSizeLeft;
+            final int currentOffsetBegin = (count) * byteSizeLeft;
+            final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
 
-            if (!rsp.isFailure()) {
-                result = new HippoResult(true, rsp.getData(), 0);
-            } else {
-                result = new HippoResult(false, rsp.getErrorCode(), rsp.getContent());
-            }
+            service.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Session session = null;
+                    try {
+                        GetBitCommand command = new GetBitCommand();
+                        command.setData(newKey);
+                        command.putHeadValue(CommandConstants.BIT_WHOLEGET, "true");
+                        ClientSessionResult sessionResult = createSession(originalKey);
 
-            return result;
-        } catch (Exception e) {
-            log.error("get wholeBit value happened error!", e);
-            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
-        } finally {
-            connectionControl.offerSession(keybytes, session);
+                        session = sessionResult.getSession();
+                        setBucketNumInCommand(command, sessionResult.getBucketNum());
+
+                        Response rsp = (Response) session.send(command, requestExpire * 1000);
+
+                        requestCount.incrementAndGet();
+                        if (!rsp.isFailure()) {
+                            requestReceive.incrementAndGet();
+                            if (Boolean.parseBoolean(rsp.getHeadValue(CommandConstants.BIT_NOT_EXIST))) {
+                                log.warn(String.format(key + " from [%d ~ %d) not exist!!", currentOffsetBegin, currentOffsetEnd));
+                            } else {
+                                String expireTimeStr = rsp.getHeadValue("expireTime");
+                                long expireTime = 0;
+                                if (!StringUtils.isEmpty(expireTimeStr)) {
+                                    expireTime = Long.parseLong(expireTimeStr);
+                                }
+                                if (System.currentTimeMillis() < expireTime) {
+                                    requestSuccess.incrementAndGet();
+                                    log.info(String.format(key + " from [%d ~ %d) exists!!", currentOffsetBegin, currentOffsetEnd));
+                                    if (maxByte >= (currentOffsetBegin + rsp.getData().length)) {
+                                        System.arraycopy(rsp.getData(), 0, resultByte, currentOffsetBegin, rsp.getData().length);
+                                    } else {
+                                        System.arraycopy(rsp.getData(), 0, resultByte, currentOffsetBegin, maxByte - currentOffsetBegin);
+                                    }
+                                } else {
+                                    log.warn(String.format(key + " from [%d ~ %d) expired!! expiretime " + expireTime, currentOffsetBegin, currentOffsetEnd));
+                                }
+                            }
+                        } else {
+                            requestError.incrementAndGet();
+                        }
+                    } catch (Exception e) {
+                        log.error("get wholeBit value happened error!", e);
+                        requestError.incrementAndGet();
+                    } finally {
+                        if (newKey != null) {
+                            connectionControl.offerSession(newKey, session);
+                        }
+                        latch.countDown();
+                    }
+                }
+            });
         }
+
+        try {
+            latch.await(timeOut, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            return new HippoResult(false, HippoCodeDefine.HIPPO_UNKNOW_ERROR, "waiting was interrupted when getting whole bit!");
+        }
+
+        if (latch.getCount() != 0) {
+            return new HippoResult(false, HippoCodeDefine.HIPPO_TIMEOUT, "waiting expire when getting whole bit!");
+        } else if (requestError.get() > 0) {
+            return new HippoResult(false, HippoCodeDefine.HIPPO_READ_FAILURE, "one of multi part error happened!");
+        }
+
+        log.info(key + " in getWholeBit request package is " + requestCount.get() + " success count " + requestSuccess.get() + " error count " + requestError.get() + " receive " + requestReceive
+                .get());
+        return new HippoResult(true, resultByte, 0);
     }
 
     @Override
     public HippoResult removeWholeBit(final Serializable key, int maxOffset, final int requestExpire, int timeOut) {
         byte[] keybytes = null;
-        Session session = null;
+        try {
+            keybytes = serializer.serialize(key);
+        } catch (IOException e) {
+            log.error("serialize bit error when getWholeBit! ", e);
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
+        }
 
         if (maxOffset < 0) {
             maxOffset = 100000001;
         } else {
             maxOffset++;
         }
+        final byte[] originalKey = keybytes;
+
+        final int maxByte = (maxOffset % 8 == 0 ? maxOffset / 8 : maxOffset / 8 + 1);
+        final AtomicInteger requestCount = new AtomicInteger(0);
+        final AtomicInteger requestSuccess = new AtomicInteger(0);
+        final AtomicInteger requestError = new AtomicInteger(0);
+        final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, CommandConstants.DEFAULT_BIT_BLOCKED_SIZE);
+
+        int bitSizeLeft = byteSizeLeft * 8;
+        int allBlockOffset = (maxOffset % bitSizeLeft == 0 ? maxOffset / bitSizeLeft : (maxOffset / bitSizeLeft + 1));
+        final byte[] resultByte = new byte[maxByte];
+
+        final CountDownLatch latch = new CountDownLatch(allBlockOffset);
+        for (int count = 0; count < allBlockOffset; count++) {
+            final int currentOffsetEnd = (count + 1) * byteSizeLeft;
+            final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
+            service.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Session session = null;
+                    try {
+                        RemoveCommand command = new RemoveCommand();
+                        command.setData(newKey);
+
+                        ClientSessionResult sessionResult = createSession(originalKey);
+                        session = sessionResult.getSession();
+                        setBucketNumInCommand(command, sessionResult.getBucketNum());
+
+                        Response rsp = (Response) session.send(command, requestExpire * 1000);
+                        requestCount.incrementAndGet();
+
+                        if (!rsp.isFailure()) {
+                            requestSuccess.incrementAndGet();
+                        } else {
+                            requestError.incrementAndGet();
+                        }
+                    } catch (Exception e) {
+                        log.error("get wholeBit value happened error!", e);
+                        requestError.incrementAndGet();
+                    } finally {
+                        if (newKey != null) {
+                            connectionControl.offerSession(newKey, session);
+                        }
+                        latch.countDown();
+                    }
+                }
+            });
+        }
 
         try {
-            keybytes = serializer.serialize(key);
-            RemoveBitCommand command = new RemoveBitCommand();
-            command.setData(keybytes);
-            command.putHeadValue(CommandConstants.BIT_OFFSET, maxOffset + "");
-
-            ClientSessionResult sessionResult = createSession(keybytes);
-            session = sessionResult.getSession();
-            setBucketNumInCommand(command, sessionResult.getBucketNum());
-            Response rsp = (Response) session.send(command, requestExpire * 1000);
-
-            HippoResult result;
-            if (rsp.isFailure()) {
-                result = new HippoResult(false, rsp.getErrorCode(), rsp.getContent());
-            } else {
-                result = new HippoResult(true);
-            }
-            return result;
-        } catch (Exception e) {
-            log.error("get wholeBit value happened error!", e);
-            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
-        } finally {
-            connectionControl.offerSession(keybytes, session);
+            latch.await(timeOut, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            return new HippoResult(false, HippoCodeDefine.HIPPO_UNKNOW_ERROR, "waiting was interrupted when removing whole bit");
         }
+
+        if (latch.getCount() != 0) {
+            return new HippoResult(false, HippoCodeDefine.HIPPO_TIMEOUT, "waiting expire when removing whole bit!");
+        } else if (requestError.get() > 0) {
+            return new HippoResult(false, HippoCodeDefine.HIPPO_READ_FAILURE, "one of multi part error happened!");
+        }
+
+        log.info(key + " in removeWholeBit request package is " + requestCount.get() + " success count " + requestSuccess.get() + " error count " + requestError.get());
+        return new HippoResult(true, resultByte, 0);
     }
 
 

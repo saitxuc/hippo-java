@@ -29,7 +29,6 @@ public class HippoBrokerCommandManager extends BaseCommandManager<String> {
         addCommandHandler(CommandConstants.REMOVE_COMMAND_ACTION, new RemoveCommandHandle(brokerService));
         addCommandHandler(CommandConstants.ATOMICNT_COMMAND_ACTION, new AtomicntCommandHandle(brokerService));
         addCommandHandler(CommandConstants.BITGET_COMMAND_ACTION, new BitGetCommandHandle(brokerService));
-        addCommandHandler(CommandConstants.BITREMOVE_COMMAND_ACTION, new BitRemoveCommandHandle(brokerService));
         addCommandHandler(CommandConstants.BITSET_COMMAND_ACTION, new BitSetCommandHandle(brokerService));
     }
 

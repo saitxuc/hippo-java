@@ -19,7 +19,6 @@ import com.hippo.common.serializer.Serializer;
 import com.hippo.common.util.HashUtil;
 import com.hippo.common.util.IOExceptionSupport;
 import com.hippo.common.util.KeyUtil;
-import com.hippo.common.util.Logarithm;
 import com.hippo.jmx.*;
 import com.hippo.manager.ManagementContext;
 import com.hippo.mdb.MdbStoreEngine;
@@ -72,7 +71,6 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
     protected boolean useJmx = false;
     protected String jmxConnectorHost = null;
     protected Cache cache;
-    protected int defaultBitBlockedSize = 32 * 1024;
     private List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
 
     public void setTransportConnectors(List<TransportConnector> transportConnectors) {
@@ -454,103 +452,29 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
         if (CommandConstants.BITGET_COMMAND_ACTION.equals(action)) {
             return processGetBit((GetBitCommand) command);
         }
-        if (CommandConstants.BITREMOVE_COMMAND_ACTION.equals(action)) {
-            return processBitRemove((RemoveBitCommand) command);
-        }
         return null;
-    }
-
-    private HippoResult processBitRemove(RemoveBitCommand command) {
-        byte[] keybytes = command.getData();
-
-        String offsetStr = command.getHeadValue(CommandConstants.BIT_OFFSET);
-        String bucketNo = command.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
-
-        int maxOffset = Integer.parseInt(offsetStr);
-        final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, defaultBitBlockedSize);
-        int bitSizeLeft = byteSizeLeft * 8;
-        int allBlockOffset = (maxOffset % bitSizeLeft == 0 ? maxOffset / bitSizeLeft : (maxOffset / bitSizeLeft + 1));
-
-        for (int count = 0; count < allBlockOffset; count++) {
-            final int currentOffsetEnd = (count + 1) * byteSizeLeft;
-            final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
-            HippoResult result = cache.remove(newKey, Integer.parseInt(bucketNo));
-            if (!result.isSuccess()) {
-                return new HippoResult(false, result.getErrorCode(), result.getMessage());
-            }
-        }
-        return new HippoResult(true);
     }
 
     private HippoResult processGetBit(GetBitCommand command) {
         byte[] keybytes = command.getData();
-        HippoResult result = null;
+        HippoResult result;
         String offsetStr = command.getHeadValue(CommandConstants.BIT_OFFSET);
         String bucketNo = command.getHeadValue(ClientConstants.HEAD_BUCKET_NO);
-        int offset = Integer.parseInt(offsetStr);
 
         if (Boolean.parseBoolean(command.getHeadValue(CommandConstants.BIT_WHOLEGET))) {
-            final int maxByte = (offset % 8 == 0 ? offset / 8 : offset / 8 + 1);
-            final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, defaultBitBlockedSize);
-            int bitSizeLeft = byteSizeLeft * 8;
-            int allBlockOffset = (offset % bitSizeLeft == 0 ? offset / bitSizeLeft : (offset / bitSizeLeft + 1));
-            byte[] resultByte = new byte[maxByte];
-            int resultExistCount = 0;
-            for (int count = 0; count < allBlockOffset; count++) {
-                final int currentOffsetBegin = (count) * byteSizeLeft;
-                final int currentOffsetEnd = (count + 1) * byteSizeLeft;
-                final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
-                HippoResult res = cache.get(newKey, Integer.parseInt(bucketNo));
-
-                //other error
-                if (!res.isSuccess() && !HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(res.getErrorCode()) && !HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(res
-                        .getErrorCode())) {
-                    return new HippoResult(false, res.getErrorCode(), res.getMessage());
-                }
-
-                if (res.isSuccess()) {
-                    String expireTimeStr = res.getSttribute("expireTime");
-                    long expireTime = 0;
-                    if (!StringUtils.isEmpty(expireTimeStr)) {
-                        expireTime = Long.parseLong(expireTimeStr);
-                    }
-                    if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
-                        //expire
-                        LOG.warn(String.format(keybytes + " from [%d ~ %d) has been expired and will be thrown!!", currentOffsetBegin, currentOffsetEnd));
-                    } else {
-                        resultExistCount++;
-                        LOG.info(String.format(keybytes + " from [%d ~ %d) got, waiting for transport!", currentOffsetBegin, currentOffsetEnd));
-                        if (maxByte >= (currentOffsetBegin + res.getData().length)) {
-                            System.arraycopy(res.getData(), 0, resultByte, currentOffsetBegin, res.getData().length);
-                        } else {
-                            System.arraycopy(res.getData(), 0, resultByte, currentOffsetBegin, maxByte - currentOffsetBegin);
-                        }
-                    }
-                } else {
-                    if (HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(res.getErrorCode()) || HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(res
-                            .getErrorCode())) {
-                        LOG.warn(String.format(keybytes + " from [%d ~ %d) not existed!!", currentOffsetBegin, currentOffsetEnd));
-                    }
-                }
-            }
-
-            result = new HippoResult(true);
-            if (resultExistCount == 0) {
-                result.putAttribute(CommandConstants.BIT_NOT_EXIST, "true");
-            } else {
-                result.setData(resultByte);
-            }
+            result = cache.get(keybytes, Integer.parseInt(bucketNo));
         } else {
-            byte[] newKey = KeyUtil.getByteAccordingOffset(keybytes, offset, CommandConstants.DEFAULT_BIT_OP_SEPRATOR, defaultBitBlockedSize);
+            int offset = Integer.parseInt(offsetStr);
+            byte[] newKey = KeyUtil.getByteAccordingOffset(keybytes, offset, CommandConstants.DEFAULT_BIT_OP_SEPRATOR, CommandConstants.DEFAULT_BIT_BLOCKED_SIZE);
             result = cache.getBit(newKey, offset, Integer.parseInt(bucketNo));
-
-            if (!result.isSuccess() && (HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(result.getErrorCode()) || HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(result
-                    .getErrorCode()))) {
-                result.setSuccess(true);
-                result.putAttribute(CommandConstants.BIT_NOT_EXIST, "true");
-                result.putAttribute(CommandConstants.BIT_GET_EXT_CODE, result.getErrorCode());
-            }
         }
+
+        if (!result.isSuccess() && (HippoCodeDefine.HIPPO_DATA_DOES_NOT_EXIST.equals(result.getErrorCode()) || HippoCodeDefine.HIPPO_DATA_EXPIRED.equals(result.getErrorCode()))) {
+            result.setSuccess(true);
+            result.putAttribute(CommandConstants.BIT_NOT_EXIST, "true");
+            result.putAttribute(CommandConstants.BIT_GET_EXT_CODE, result.getErrorCode());
+        }
+
         return result;
     }
 
@@ -568,7 +492,7 @@ public class BrokerService extends LifeCycleSupport implements Broker, CommandHa
 
         boolean val = Boolean.parseBoolean(command.getHeadValue(CommandConstants.BIT_VAL));
 
-        byte[] newKey = KeyUtil.getByteAccordingOffset(key, offset, CommandConstants.DEFAULT_BIT_OP_SEPRATOR, defaultBitBlockedSize);
+        byte[] newKey = KeyUtil.getByteAccordingOffset(key, offset, CommandConstants.DEFAULT_BIT_OP_SEPRATOR, CommandConstants.DEFAULT_BIT_BLOCKED_SIZE);
 
         return cache.setBit(expire, newKey, offset, val, Integer.parseInt(bucketNo));
     }

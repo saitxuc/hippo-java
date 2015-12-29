@@ -29,7 +29,7 @@ public class DefaultCoderInitializer implements CoderInitializer<Command> {
 	
 	@Override
 	public ByteToMessageDecoder getDecoder() {
-		return new DefaultSerializerDecoder(1048576 * 20, serializer);
+		return new DefaultSerializerDecoder(1048576, serializer);
 	}
 
 	@Override

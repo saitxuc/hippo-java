@@ -50,5 +50,5 @@ public class CommandConstants {
     public static final String BIT_VAL = "bitval";
     public static final String BIT_GET_EXT_CODE = "bitgeterrorcode";
     public static final byte DEFAULT_BIT_OP_SEPRATOR = (byte) -19;
-    public static final String BITREMOVE_COMMAND_ACTION = "bitremove";
+    public static int DEFAULT_BIT_BLOCKED_SIZE = 32 * 1024;
 }
