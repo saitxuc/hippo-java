@@ -712,7 +712,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
     }
 
     @Override
-    public HippoResult getWholeBit(final Serializable key, int maxOffset, final int requestExpire, int timeOut) {
+    public HippoResult getWholeBit(final Serializable key, int maxOffset, final int requestExpire) {
         byte[] keybytes = null;
 
         if (maxOffset < 0) {
@@ -753,7 +753,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
     }
 
     @Override
-    public HippoResult removeWholeBit(final Serializable key, int maxOffset, final int requestExpire, int timeOut) {
+    public HippoResult removeWholeBit(final Serializable key, int maxOffset, final int requestExpire) {
         byte[] keybytes = null;
         Session session = null;
 
@@ -797,7 +797,6 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
         try {
             GetBitCommand command = new GetBitCommand();
             keybytes = serializer.serialize(key);
-            //newKey = getByteAccordingOffset(keybytes, offset);
             command.setData(keybytes);
             command.putHeadValue(CommandConstants.BIT_OFFSET, offset + "");
 
@@ -851,7 +850,6 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
         try {
             SetBitCommand command = new SetBitCommand();
             keybytes = serializer.serialize(key);
-            //newKey = getByteAccordingOffset(keybytes, offset);
             command.setExpire(expire);
             command.setData(keybytes);
             command.putHeadValue(CommandConstants.BIT_OFFSET, offset + "");
