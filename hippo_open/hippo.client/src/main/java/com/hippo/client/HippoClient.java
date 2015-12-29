@@ -104,7 +104,7 @@ public interface HippoClient extends LifeCycle {
      * @param requestExpire
      * @return
      */
-    public HippoResult getWholeBit(Serializable key, int maxOffset, int requestExpire);
+    public HippoResult getWholeBit(Serializable key, int maxOffset, int requestExpire, int timeOut);
 
     /**
      * @param key
@@ -113,7 +113,7 @@ public interface HippoClient extends LifeCycle {
      * @param timeOut
      * @return
      */
-    public HippoResult removeWholeBit(Serializable key, int maxOffset, int requestExpire);
+    public HippoResult removeWholeBit(Serializable key, int maxOffset, int requestExpire, int timeOut);
 
     /**
      * @param key
