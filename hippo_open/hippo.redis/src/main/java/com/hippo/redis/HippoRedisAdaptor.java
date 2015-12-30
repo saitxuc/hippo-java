@@ -2,17 +2,14 @@ package com.hippo.redis;
 
 import com.hippo.client.ClientConstants;
 import com.hippo.client.command.*;
-import com.hippo.common.util.KeyUtil;
 import com.hippo.network.command.Command;
 import com.hippo.network.command.CommandConstants;
 import com.hippo.network.command.EchoCommand;
 import com.hippo.network.command.PingCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import static com.hippo.redis.util.Encoding.bytesToNum;
 import static com.hippo.redis.util.Encoding.redisByteToBoolean;
 
@@ -25,8 +22,6 @@ public class HippoRedisAdaptor implements RedisAdaptor {
 
     private static final String DEFAULT_BUCK_NO = "0";
     private static final String DEFAULT_VERSION = "0";
-    private final int defaultVal = 32 * 1024;
-    private byte separator = CommandConstants.DEFAULT_BIT_OP_SEPRATOR;
 
     @Override
     public Command set(byte[] key0, byte[] value1) {
@@ -90,8 +85,7 @@ public class HippoRedisAdaptor implements RedisAdaptor {
         boolean val = redisByteToBoolean(value2);
         SetBitCommand command = new SetBitCommand();
         fillHeader(command);
-        byte[] newKey = KeyUtil.getByteAccordingOffset(key0, offsetInt, separator, defaultVal);
-        command.setData(newKey);
+        command.setData(key0);
         command.setExpire(-1);
         command.putHeadValue(CommandConstants.BIT_OFFSET, offsetInt + "");
         command.putHeadValue(CommandConstants.BIT_VAL, val + "");
@@ -104,8 +98,7 @@ public class HippoRedisAdaptor implements RedisAdaptor {
         int offsetInt = offsetL.intValue();
         GetBitCommand command = new GetBitCommand();
         fillHeader(command);
-        byte[] newKey = KeyUtil.getByteAccordingOffset(key0, offsetInt, separator, defaultVal);
-        command.setData(newKey);
+        command.setData(key0);
         command.putHeadValue(CommandConstants.BIT_OFFSET, offsetInt + "");
         return command;
     }
