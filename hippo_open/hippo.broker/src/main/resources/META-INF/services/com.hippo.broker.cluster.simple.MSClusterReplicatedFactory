@@ -1,0 +1,2 @@
+com.hippo.broker.cluster.simple.MdbClusterReplicatedFactory
+com.hippo.broker.cluster.simple.LevelDbClusterReplicatedFactory
