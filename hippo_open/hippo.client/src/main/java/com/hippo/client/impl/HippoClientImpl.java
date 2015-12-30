@@ -1,5 +1,26 @@
 package com.hippo.client.impl;
 
+import com.hippo.client.*;
+import com.hippo.client.command.*;
+import com.hippo.client.exception.HippoClientException;
+import com.hippo.client.transport.AbstractClientConnectionControl;
+import com.hippo.client.util.ClientSPIManager;
+import com.hippo.common.errorcode.HippoCodeDefine;
+import com.hippo.common.exception.HippoException;
+import com.hippo.common.lifecycle.LifeCycleSupport;
+import com.hippo.common.serializer.KryoSerializer;
+import com.hippo.common.serializer.Serializer;
+import com.hippo.common.util.ByteUtil;
+import com.hippo.common.util.KeyUtil;
+import com.hippo.common.util.Logarithm;
+import com.hippo.network.Session;
+import com.hippo.network.command.Command;
+import com.hippo.network.command.CommandConstants;
+import com.hippo.network.command.Response;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
@@ -11,39 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.hippo.client.ClientConstants;
-import com.hippo.client.ClientSessionResult;
-import com.hippo.client.HippoClient;
-import com.hippo.client.HippoConnector;
-import com.hippo.client.HippoResult;
-import com.hippo.client.command.AtomicntCommand;
-import com.hippo.client.command.GetBitCommand;
-import com.hippo.client.command.GetCommand;
-import com.hippo.client.command.RemoveCommand;
-import com.hippo.client.command.SetBitCommand;
-import com.hippo.client.command.SetCommand;
-import com.hippo.client.command.UpdateCommand;
-import com.hippo.client.exception.HippoClientException;
-import com.hippo.client.transport.AbstractClientConnectionControl;
-import com.hippo.client.util.ClientSPIManager;
-import com.hippo.common.errorcode.HippoCodeDefine;
-import com.hippo.common.exception.HippoException;
-import com.hippo.common.lifecycle.LifeCycleSupport;
-import com.hippo.common.serializer.KryoSerializer;
-import com.hippo.common.serializer.Serializer;
-import com.hippo.common.util.ByteUtil;
-import com.hippo.common.util.Logarithm;
-import com.hippo.network.Session;
-import com.hippo.network.command.Command;
-import com.hippo.network.command.CommandConstants;
-import com.hippo.network.command.Response;
-
 /**
- * 
  * @author saitxuc write 2014-8-11
  */
 public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
@@ -68,11 +57,6 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
 
     public HippoClientImpl() {
         this.serializer = new KryoSerializer();
-        try {
-            separator = serializer.serialize(CommandConstants.BITSET_SEPRATOR);
-        } catch (IOException e) {
-            log.error("separator BITSET_SEPRATOR error!!", e);
-        }
     }
 
     public HippoClientImpl(HippoConnector connector) {
@@ -119,7 +103,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("get vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("get vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -153,7 +137,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("set vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("set vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -187,7 +171,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("set vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("set vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -221,7 +205,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("set vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("set vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -255,7 +239,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("set vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("set vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -299,7 +283,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("set vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("set vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -338,7 +322,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("update vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("update vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -388,7 +372,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("update vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("update vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -438,7 +422,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("update vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("update vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -488,7 +472,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("update vaule happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("update vaule happened error! ", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -532,7 +516,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("remove value happened error!", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("remove value happened error!", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -570,7 +554,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("remove vaule happened error!", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("remove vaule happened error!", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -627,6 +611,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
 
     /**
      * set bucketNum value to command
+     *
      * @param command
      * @param bucketNum
      */
@@ -692,7 +677,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("add count happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("add count happened error!", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
@@ -733,12 +718,13 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
 
     @Override
     public HippoResult getWholeBit(final Serializable key, int maxOffset, final int requestExpire, int timeOut) {
+
         byte[] keybytes = null;
         try {
             keybytes = serializer.serialize(key);
         } catch (IOException e) {
             log.error("serialize bit error when getWholeBit! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         }
 
         if (maxOffset < 0) {
@@ -753,18 +739,19 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
         final AtomicInteger requestReceive = new AtomicInteger(0);
         final int maxByte = (maxOffset % 8 == 0 ? maxOffset / 8 : maxOffset / 8 + 1);
 
-        final int byteSizeLeft = getByteSizeLeft(keybytes, defaultVal, separator);
+        final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, CommandConstants.DEFAULT_BIT_BLOCKED_SIZE);
         int bitSizeLeft = byteSizeLeft * 8;
         int allBlockOffset = (maxOffset % bitSizeLeft == 0 ? maxOffset / bitSizeLeft : (maxOffset / bitSizeLeft + 1));
 
         final byte[] resultByte = new byte[maxByte];
 
         final CountDownLatch latch = new CountDownLatch(allBlockOffset);
-
+        final byte[] originalKey = keybytes;
         for (int count = 0; count < allBlockOffset; count++) {
             final int currentOffsetEnd = (count + 1) * byteSizeLeft;
             final int currentOffsetBegin = (count) * byteSizeLeft;
-            final byte[] newKey = getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), separator);
+            final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
+
             service.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -773,34 +760,34 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
                         GetBitCommand command = new GetBitCommand();
                         command.setData(newKey);
                         command.putHeadValue(CommandConstants.BIT_WHOLEGET, "true");
+                        ClientSessionResult sessionResult = createSession(originalKey);
 
-                        ClientSessionResult sessionResult = createSession(newKey);
                         session = sessionResult.getSession();
                         setBucketNumInCommand(command, sessionResult.getBucketNum());
 
                         Response rsp = (Response) session.send(command, requestExpire * 1000);
+
                         requestCount.incrementAndGet();
                         if (!rsp.isFailure()) {
                             requestReceive.incrementAndGet();
                             if (Boolean.parseBoolean(rsp.getHeadValue(CommandConstants.BIT_NOT_EXIST))) {
-                                log.warn(String.format(key + " from [%d ~ %d) not exist", currentOffsetBegin, currentOffsetEnd));
+                                log.warn(String.format(key + " from [%d ~ %d) not exist!!", currentOffsetBegin, currentOffsetEnd));
                             } else {
                                 String expireTimeStr = rsp.getHeadValue("expireTime");
-                                //System.out.println(expireTimeStr);
                                 long expireTime = 0;
                                 if (!StringUtils.isEmpty(expireTimeStr)) {
                                     expireTime = Long.parseLong(expireTimeStr);
                                 }
                                 if (System.currentTimeMillis() < expireTime) {
                                     requestSuccess.incrementAndGet();
-                                    log.info(String.format(key + " get from [%d ~ %d) exist", currentOffsetBegin, currentOffsetEnd));
+                                    log.info(String.format(key + " from [%d ~ %d) exists!!", currentOffsetBegin, currentOffsetEnd));
                                     if (maxByte >= (currentOffsetBegin + rsp.getData().length)) {
                                         System.arraycopy(rsp.getData(), 0, resultByte, currentOffsetBegin, rsp.getData().length);
                                     } else {
                                         System.arraycopy(rsp.getData(), 0, resultByte, currentOffsetBegin, maxByte - currentOffsetBegin);
                                     }
                                 } else {
-                                    log.warn(String.format(key + " from [%d ~ %d) expired", currentOffsetBegin, currentOffsetEnd));
+                                    log.warn(String.format(key + " from [%d ~ %d) expired!! expiretime " + expireTime, currentOffsetBegin, currentOffsetEnd));
                                 }
                             }
                         } else {
@@ -820,17 +807,19 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
         }
 
         try {
-            latch.await();
+            latch.await(timeOut, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             return new HippoResult(false, HippoCodeDefine.HIPPO_UNKNOW_ERROR, "waiting was interrupted when getting whole bit!");
         }
 
-        if (requestError.get() > 0) {
+        if (latch.getCount() != 0) {
+            return new HippoResult(false, HippoCodeDefine.HIPPO_TIMEOUT, "waiting expire when getting whole bit!");
+        } else if (requestError.get() > 0) {
             return new HippoResult(false, HippoCodeDefine.HIPPO_READ_FAILURE, "one of multi part error happened!");
         }
 
-        log.info(key + " in getWholeBit request package is " + requestCount.get() + " success count " + requestSuccess.get() + " error count " + requestError
-            .get() + " receive " + requestReceive.get());
+        log.info(key + " in getWholeBit request package is " + requestCount.get() + " success count " + requestSuccess.get() + " error count " + requestError.get() + " receive " + requestReceive
+                .get());
         return new HippoResult(true, resultByte, 0);
     }
 
@@ -841,7 +830,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             keybytes = serializer.serialize(key);
         } catch (IOException e) {
             log.error("serialize bit error when getWholeBit! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         }
 
         if (maxOffset < 0) {
@@ -849,12 +838,13 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
         } else {
             maxOffset++;
         }
+        final byte[] originalKey = keybytes;
 
         final int maxByte = (maxOffset % 8 == 0 ? maxOffset / 8 : maxOffset / 8 + 1);
         final AtomicInteger requestCount = new AtomicInteger(0);
         final AtomicInteger requestSuccess = new AtomicInteger(0);
         final AtomicInteger requestError = new AtomicInteger(0);
-        final int byteSizeLeft = getByteSizeLeft(keybytes, defaultVal, separator);
+        final int byteSizeLeft = KeyUtil.getByteSizeLeft(keybytes, CommandConstants.DEFAULT_BIT_BLOCKED_SIZE);
 
         int bitSizeLeft = byteSizeLeft * 8;
         int allBlockOffset = (maxOffset % bitSizeLeft == 0 ? maxOffset / bitSizeLeft : (maxOffset / bitSizeLeft + 1));
@@ -863,8 +853,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
         final CountDownLatch latch = new CountDownLatch(allBlockOffset);
         for (int count = 0; count < allBlockOffset; count++) {
             final int currentOffsetEnd = (count + 1) * byteSizeLeft;
-            final int currentOffsetBegin = (count) * byteSizeLeft;
-            final byte[] newKey = getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), separator);
+            final byte[] newKey = KeyUtil.getKeyAfterCombineOffset(keybytes, Logarithm.intToBytes(currentOffsetEnd), CommandConstants.DEFAULT_BIT_OP_SEPRATOR);
             service.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -873,7 +862,7 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
                         RemoveCommand command = new RemoveCommand();
                         command.setData(newKey);
 
-                        ClientSessionResult sessionResult = createSession(newKey);
+                        ClientSessionResult sessionResult = createSession(originalKey);
                         session = sessionResult.getSession();
                         setBucketNumInCommand(command, sessionResult.getBucketNum());
 
@@ -910,24 +899,23 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return new HippoResult(false, HippoCodeDefine.HIPPO_READ_FAILURE, "one of multi part error happened!");
         }
 
-        log.info(key + " in removeWholeBit request package is " + requestCount.get() + " success count " + requestSuccess.get() + " error count " + requestError
-            .get());
+        log.info(key + " in removeWholeBit request package is " + requestCount.get() + " success count " + requestSuccess.get() + " error count " + requestError.get());
         return new HippoResult(true, resultByte, 0);
     }
+
 
     @Override
     public HippoResult getBit(Serializable key, int offset, int timeExpire) {
         Session session = null;
         byte[] keybytes = null;
-        byte[] newKey = null;
         try {
             GetBitCommand command = new GetBitCommand();
             keybytes = serializer.serialize(key);
-            newKey = getByteAccordingOffset(keybytes, offset);
-            command.setData(newKey);
+            //newKey = getByteAccordingOffset(keybytes, offset);
+            command.setData(keybytes);
             command.putHeadValue(CommandConstants.BIT_OFFSET, offset + "");
 
-            ClientSessionResult sessionResult = createSession(newKey);
+            ClientSessionResult sessionResult = createSession(keybytes);
             session = sessionResult.getSession();
             setBucketNumInCommand(command, sessionResult.getBucketNum());
 
@@ -961,14 +949,12 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("get bit happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("get bit happened error!", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
         } finally {
-            if (newKey != null) {
-                connectionControl.offerSession(newKey, session);
-            }
+            connectionControl.offerSession(keybytes, session);
         }
     }
 
@@ -976,17 +962,16 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
     public HippoResult setBit(Serializable key, int offset, boolean val, int expire, int timeExpire) {
         Session session = null;
         byte[] keybytes = null;
-        byte[] newKey = null;
         try {
             SetBitCommand command = new SetBitCommand();
             keybytes = serializer.serialize(key);
-            newKey = getByteAccordingOffset(keybytes, offset);
+            //newKey = getByteAccordingOffset(keybytes, offset);
             command.setExpire(expire);
-            command.setData(newKey);
+            command.setData(keybytes);
             command.putHeadValue(CommandConstants.BIT_OFFSET, offset + "");
             command.putHeadValue(CommandConstants.BIT_VAL, val + "");
 
-            ClientSessionResult sessionResult = createSession(newKey);
+            ClientSessionResult sessionResult = createSession(keybytes);
             session = sessionResult.getSession();
             setBucketNumInCommand(command, sessionResult.getBucketNum());
 
@@ -1001,14 +986,12 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             return result;
         } catch (IOException e) {
             log.error("set bit happened error! ", e);
-            return new HippoResult(false, HippoCodeDefine.HIIPO_CLIENT_ERROR, e.getMessage());
+            return new HippoResult(false, HippoCodeDefine.HIPPO_CLIENT_ERROR, e.getMessage());
         } catch (HippoException e) {
             log.error("set bit happened error!", e);
             return new HippoResult(false, e.getErrorCode(), e.getMessage());
         } finally {
-            if (newKey != null) {
-                connectionControl.offerSession(newKey, session);
-            }
+            connectionControl.offerSession(keybytes, session);
         }
     }
 
@@ -1039,24 +1022,4 @@ public class HippoClientImpl extends LifeCycleSupport implements HippoClient {
             throw new HippoException(" data and key length is larger than 1m.  ");
         }
     }
-
-    private int getByteSizeLeft(byte[] originalKey, int defaultVal, byte[] sep) {
-        return defaultVal - 30 - originalKey.length - sep.length;
-    }
-
-    private byte[] getKeyAfterCombineOffset(byte[] originalKey, byte[] suffix, byte[] sep) {
-        final byte[] newKey = new byte[originalKey.length + suffix.length + sep.length];
-        System.arraycopy(originalKey, 0, newKey, 0, originalKey.length);
-        System.arraycopy(sep, 0, newKey, originalKey.length - 1, sep.length);
-        System.arraycopy(suffix, 0, newKey, originalKey.length - 1 + sep.length, suffix.length);
-        return newKey;
-    }
-
-    private byte[] getByteAccordingOffset(byte[] originalKey, int offset) {
-        int byteSizeLeft = getByteSizeLeft(originalKey, defaultVal, separator);
-        int blockOffset = offset / (byteSizeLeft * 8);
-        byte[] offsetPerBlock = Logarithm.intToBytes((blockOffset + 1) * byteSizeLeft);
-        return getKeyAfterCombineOffset(originalKey, offsetPerBlock, separator);
-    }
-
 }

@@ -1,7 +1,5 @@
 package com.hippo.broker.transport.command.handle;
 
-import com.hippo.broker.Broker;
-import com.hippo.client.HippoResult;
 import com.hippo.network.CommandResult;
 import com.hippo.network.command.Command;
 import com.hippo.network.transport.nio.CommandHandle;
@@ -19,7 +17,7 @@ public class BitGetCommandHandle implements CommandHandle {
 
     @Override
     public CommandResult doCommand(Command command) throws Exception {
-    	CommandResult result = commandHandler.doCommand(command);
+        CommandResult result = commandHandler.doCommand(command);
         return result;
     }
 }

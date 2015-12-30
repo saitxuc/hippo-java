@@ -1,12 +1,11 @@
 package com.hippo.client;
 
 import com.hippo.client.impl.HippoClientImpl;
-import com.hippo.common.util.Logarithm;
 
 public class SimpleHippoClientBitPerfTest {
 
     public static void main(final String[] args) throws Exception {
-        final String ip = "192.168.0.132";
+        final String ip = "10.59.2.112";
         final String key = "test2";
 
         final HippoConnector hippoConnector = new HippoConnector();
@@ -15,17 +14,17 @@ public class SimpleHippoClientBitPerfTest {
         final HippoClientImpl client = new HippoClientImpl(hippoConnector);
         client.start();
 
-        /*System.out.println("begin to set");
-        for (int i = 0; i < 100; i++) {
+        System.out.println("begin to set");
+        for (int i = 0; i < 1500; i++) {
             HippoResult result = client.setBit(key, i, true, 30000, 5);
             if (!result.isSuccess()) {
                 System.out.println("set bit " + i + " error, code -> " + result.getErrorCode());
             }
-        }*/
+        }
 
-       System.out.println("begin to get");
+        System.out.println("begin to get");
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1500; i++) {
             HippoResult result = client.getBit(key, i, 50);
             if (!result.isSuccess()) {
                 System.out.println("get bit " + i + " error, code -> " + result.getErrorCode());
@@ -36,8 +35,41 @@ public class SimpleHippoClientBitPerfTest {
             }
         }
 
+        HippoResult result = client.getWholeBit(key, -1, 500, 100);
+
+        if (result.isSuccess()) {
+            byte[] data = result.getData();
+            for (int i = 0; i <= data.length; i++) {
+                if (data[i] != -1) {
+                    System.out.println(i + " not right ! value is " + data[i]);
+                    break;
+                }
+            }
+        }
+
+        result = client.removeWholeBit(key, 10000, 500, 100);
+        if (result.isSuccess()) {
+            System.out.println("remove success");
+        }
+
+        System.out.println("begin to get");
+
+        for (int i = 0; i < 100; i++) {
+            result = client.getBit(key, i, 50);
+            if (!result.isSuccess()) {
+                System.out.println("get bit " + i + " error, code -> " + result.getErrorCode());
+            } else {
+                if (result.getData()[0] != 1) {
+                    System.out.println("validation not right! offset " + i);
+                }
+            }
+        }
+
+
         client.stop();
         System.exit(1);
+
+
 
 
        /* for (int j = 0; j < clientCount; j++) {
@@ -92,25 +124,5 @@ public class SimpleHippoClientBitPerfTest {
         }
 */
         // System.exit(1);
-    }
-
-
-    private static int getByteSizeLeft(byte[] originalKey, int defaultVal, byte[] sep) {
-        return defaultVal - 20 - originalKey.length - sep.length * 3 - 4;
-    }
-
-    private static byte[] getKeyAfterCombineOffset(byte[] originalKey, byte[] suffix, byte[] sep) {
-        final byte[] newKey = new byte[originalKey.length + suffix.length + sep.length];
-        System.arraycopy(originalKey, 0, newKey, 0, originalKey.length);
-        System.arraycopy(sep, 0, newKey, originalKey.length - 1, sep.length);
-        System.arraycopy(suffix, 0, newKey, originalKey.length - 1 + sep.length, suffix.length);
-        return newKey;
-    }
-
-    private static byte[] getByteAccordingOffset(byte[] originalKey, int offset, byte[] separator) {
-        int byteSizeLeft = getByteSizeLeft(originalKey, 32 * 1024, separator);
-        int blockOffset = (offset + 1) / (byteSizeLeft * 8);
-        byte[] suffix = Logarithm.intToBytes(blockOffset * byteSizeLeft);
-        return getKeyAfterCombineOffset(originalKey, suffix, separator);
     }
 }
